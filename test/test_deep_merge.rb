@@ -1,5 +1,7 @@
 require 'test/unit'
-require '../lib/deep_merge.rb'
+
+$:.unshift(File.dirname(__FILE__) + '/../lib/')
+require 'deep_merge'
 
 class TestDeepMerge < Test::Unit::TestCase
 
