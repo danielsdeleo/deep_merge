@@ -22,3 +22,7 @@ module DeepMerge
 
   end # DeepMergeHashExt
 end
+
+class Hash
+  include DeepMerge::DeepMergeHash
+end

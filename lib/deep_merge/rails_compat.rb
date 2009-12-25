@@ -1,6 +1,6 @@
 require 'deep_merge/core'
 
-module DeepMergeHash
+module DeepMerge
   module RailsCompat
     # ko_hash_merge! will merge and knockout elements prefixed with DEFAULT_FIELD_KNOCKOUT_PREFIX
     def ko_deeper_merge!(source, options = {})

@@ -1,4 +1,9 @@
 module DeepMerge
+  
+  class InvalidParameter < StandardError; end
+  
+  DEFAULT_FIELD_KNOCKOUT_PREFIX = '--'
+
   # Deep Merge core documentation.
   # deep_merge! method permits merging of arbitrary child elements. The two top level
   # elements must be hashes. These hashes can contain unlimited (to stack limit) levels
@@ -52,7 +57,7 @@ module DeepMerge
   # 
   # There are many tests for this library - and you can learn more about the features
   # and usages of deep_merge! by just browsing the test examples
-  def DeepMerge.deep_merge!(source, dest, options = {})
+  def self.deep_merge!(source, dest, options = {})
     # turn on this line for stdout debugging text
     merge_debug = options[:merge_debug] || false
     overwrite_unmergeable = !options[:preserve_unmergeables]
@@ -144,7 +149,7 @@ module DeepMerge
   end # deep_merge!
 
   # allows deep_merge! to uniformly handle overwriting of unmergeable entities
-  def DeepMerge::overwrite_unmergeables(source, dest, options)
+  def self.overwrite_unmergeables(source, dest, options)
     merge_debug = options[:merge_debug] || false
     overwrite_unmergeable = !options[:preserve_unmergeables]
     knockout_prefix = options[:knockout_prefix] || false
@@ -170,7 +175,7 @@ module DeepMerge
     dest
   end
 
-  def DeepMerge::clear_or_nil(obj)
+  def self.clear_or_nil(obj)
     if obj.respond_to?(:clear)
       obj.clear
     else
