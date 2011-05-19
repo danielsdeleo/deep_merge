@@ -14,7 +14,7 @@ class TestDeepMerge < Test::Unit::TestCase
   #   deep_merge # skips unmergeable
   def test_hash_deep_merge
     x = {}
-    assert x.respond_to?('deep_merge!'.to_sym)  
+    assert x.respond_to?('deep_merge!'.to_sym)
     hash_src  = {'id' => [3,4,5]}
     hash_dest = {'id' => [1,2,3]}
     assert hash_dest.ko_deep_merge!(hash_src)
@@ -30,9 +30,9 @@ class TestDeepMerge < Test::Unit::TestCase
     assert hash_dest.deep_merge(hash_src)
     assert_equal({'id' => [1,2,3]}, hash_dest)
   end
-  
+
   FIELD_KNOCKOUT_PREFIX = DeepMerge::DEFAULT_FIELD_KNOCKOUT_PREFIX
-  
+
   # tests DeepMerge::deep_merge! function
   def test_deep_merge
     # merge tests (moving from basic to more complex)
