@@ -70,7 +70,7 @@ module DeepMerge
     sort_merged_arrays = options[:sort_merged_arrays] || false
     di = options[:debug_indent] || ''
     # do nothing if source is nil
-    return dest if source.nil? || (source.respond_to?(:blank?) && source.blank?)
+    return dest if source.nil?
     # if dest doesn't exist, then simply copy source to it
     if !(dest) && overwrite_unmergeable
       dest = source; return dest
