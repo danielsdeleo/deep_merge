@@ -1,7 +1,7 @@
 module DeepMerge
-  
+
   class InvalidParameter < StandardError; end
-  
+
   DEFAULT_FIELD_KNOCKOUT_PREFIX = '--'
 
   # Deep Merge core documentation.
@@ -18,7 +18,7 @@ module DeepMerge
   #   Results: {:x => [1,2,3,4,5,'6'], :y => 2}
   # By default, "deep_merge!" will overwrite any unmergeables and merge everything else.
   # To avoid this, use "deep_merge" (no bang/exclamation mark)
-  # 
+  #
   # Options:
   #   Options are specified in the last parameter passed, which should be in hash format:
   #   hash.deep_merge!({:x => [1,2]}, {:knockout_prefix => '--'})
@@ -34,7 +34,7 @@ module DeepMerge
   #      Set to true to get console output of merge process for debugging
   #
   # Selected Options Details:
-  # :knockout_prefix => The purpose of this is to provide a way to remove elements 
+  # :knockout_prefix => The purpose of this is to provide a way to remove elements
   #   from existing Hash by specifying them in a special way in incoming hash
   #    source = {:x => ['--1', '2']}
   #    dest   = {:x => ['1', '3']}
@@ -52,9 +52,9 @@ module DeepMerge
   #   dest   = {:x => ['5','6','7,8']}
   #   dest.deep_merge!(source, {:unpack_arrays => ','})
   #   Results: {:x => ['1','2','3','4','5','6','7','8'}
-  #   Why: If receiving data from an HTML form, this makes it easy for a checkbox 
+  #   Why: If receiving data from an HTML form, this makes it easy for a checkbox
   #    to pass multiple values from within a single HTML element
-  # 
+  #
   # There are many tests for this library - and you can learn more about the features
   # and usages of deep_merge! by just browsing the test examples
   def self.deep_merge!(source, dest, options = {})
