@@ -3,6 +3,14 @@ require 'test/unit'
 $:.unshift(File.dirname(__FILE__) + '/../lib/')
 require 'deep_merge'
 
+# Assume strings have a blank? method
+# as they do when ActiveSupport is included.
+module StringBlank
+  def blank?
+    size == 0
+  end
+end
+
 class TestDeepMerge < Test::Unit::TestCase
 
   def setup
@@ -14,7 +22,7 @@ class TestDeepMerge < Test::Unit::TestCase
   #   deep_merge # skips unmergeable
   def test_hash_deep_merge
     x = {}
-    assert x.respond_to?('deep_merge!'.to_sym)  
+    assert x.respond_to?('deep_merge!'.to_sym)
     hash_src  = {'id' => [3,4,5]}
     hash_dest = {'id' => [1,2,3]}
     assert hash_dest.ko_deep_merge!(hash_src)
@@ -30,9 +38,9 @@ class TestDeepMerge < Test::Unit::TestCase
     assert hash_dest.deep_merge(hash_src)
     assert_equal({'id' => [1,2,3]}, hash_dest)
   end
-  
+
   FIELD_KNOCKOUT_PREFIX = DeepMerge::DEFAULT_FIELD_KNOCKOUT_PREFIX
-  
+
   # tests DeepMerge::deep_merge! function
   def test_deep_merge
     # merge tests (moving from basic to more complex)
@@ -551,5 +559,14 @@ class TestDeepMerge < Test::Unit::TestCase
     hash_dst = {"item" => [{"3" => "5"}]}
     DeepMerge::deep_merge!(hash_src, hash_dst)
     assert_equal({"item" => [{"3" => "5"}, {"1" => "3"}, {"2" => "4"}]}, hash_dst)
+
+
+    # Merging empty strings
+    s1, s2 = "hello", ""
+    [s1, s2].each { |s| s.extend StringBlank }
+    hash_dst = {"item" => s1 }
+    hash_src = {"item" => s2 }
+    DeepMerge::deep_merge!(hash_src, hash_dst)
+    assert_equal({"item" => ""}, hash_dst)
   end # test_deep_merge
 end
