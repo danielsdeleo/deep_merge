@@ -30,6 +30,8 @@ module DeepMerge
   #      Set to true to sort all arrays that are merged together
   #   :unpack_arrays          DEFAULT: nil
   #      Set to string value to run "Array::join" then "String::split" against all arrays
+  #   :merge_hash_arrays      DEFAULT: false
+  #      Set to true to merge hashes within arrays
   #   :merge_debug            DEFAULT: false
   #      Set to true to get console output of merge process for debugging
   #
@@ -55,6 +57,12 @@ module DeepMerge
   #   Why: If receiving data from an HTML form, this makes it easy for a checkbox
   #    to pass multiple values from within a single HTML element
   #
+  # :merge_hash_arrays => merge hashes within arrays
+  #   source = {:x => [{:y => 1}]}
+  #   dest   = {:x => [{:z => 2}]}
+  #   dest.deep_merge!(source, {:merge_hash_arrays => true})
+  #   Results: {:x => [{:y => 1, :z => 2}]}
+  # 
   # There are many tests for this library - and you can learn more about the features
   # and usages of deep_merge! by just browsing the test examples
   def self.deep_merge!(source, dest, options = {})
@@ -68,6 +76,8 @@ module DeepMerge
     array_split_char = options[:unpack_arrays] || false
     # request that we sort together any arrays when they are merged
     sort_merged_arrays = options[:sort_merged_arrays] || false
+    # request that arrays of hashes are merged together
+    merge_hash_arrays = options[:merge_hash_arrays] || false
     di = options[:debug_indent] || ''
     # do nothing if source is nil
     return dest if source.nil?
@@ -134,7 +144,20 @@ module DeepMerge
           puts if merge_debug
         end
         puts "#{di} merging arrays: #{source.inspect} :: #{dest.inspect}" if merge_debug
-        dest = dest | source
+        source_all_hashes = source.all? { |i| i.kind_of?(Hash) }
+        dest_all_hashes = dest.all? { |i| i.kind_of?(Hash) }
+        if merge_hash_arrays && source_all_hashes && dest_all_hashes
+          # merge hashes in lists
+          list = []
+          dest.each_index do |i|
+            list[i] = deep_merge!(source[i] || {}, dest[i],
+                                  options.merge(:debug_indent => di + '  '))
+          end
+          list += source[dest.count..-1] if source.count > dest.count
+          dest = list
+        else
+          dest = dest | source
+        end
         dest.sort! if sort_merged_arrays
       elsif overwrite_unmergeable
         puts "#{di} overwriting dest: #{source.inspect} -over-> #{dest.inspect}" if merge_debug
