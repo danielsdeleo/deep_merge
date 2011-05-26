@@ -1,0 +1,34 @@
+2011-05-23  Joe Van Dyk <joe@fixieconsulting.com>
+
+  * Added Changelog
+
+2011-05-18  Joe Van Dyk <joe@fixieconsulting.com>
+
+  * Merging empty strings should work if String#blank? is defined.
+
+  * Use unix line endings
+
+  * Removing extra whitespace
+
+2010-01-11  Dan DeLeo <danielsdeleo@mac.com>
+
+  * fix boolean merging according to mdkent's patch explicitly test 
+    for nils w/ #nil? instead of negating. Thanks mdkent!
+
+2009-12-25  Dan DeLeo <danielsdeleo@mac.com>
+
+  * miscellaneous cleanup
+
+  * make rails/active_support compat optional
+
+  * add jeweler rake task for gemability
+
+2009-12-24  Dan DeLeo <danielsdeleo@mac.com>
+
+  * VERSION: Version bump to 0.0.1
+
+  * VERSION: Version bump to 0.0.0
+
+2009-11-06  Jonathan Weiss <jw@innerewut.de>
+
+  * import
