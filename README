@@ -77,6 +77,15 @@ Deep Merge Core Documentation
  There are many tests for this library - and you can learn more about the features
  and usages of deep_merge! by just browsing the test examples
 
+Using deep_merge in Rails
+=========================
+To avoid conflict with ActiveSupport, load deep_merge via:
+  require 'deep_merge/rails_compat'
+
+The deep_merge methods will then be defined as
+  Hash#deeper_merge
+  Hash#deeper_merge!
+  Hash#ko_deeper_merge!
 
 Simple Example Code
 ===================
@@ -89,7 +98,9 @@ y.deep_merge!(x)
 
 Availablility
 =============
-SVN Repo here:  http://trac.misuse.org/science/wiki/DeepMerge
-Contact author: http://www.misuse.org/science
+deep_merge was written by Steve Midgley, and is now maintained by Daniel DeLeo.
+The official home of deep_merge on the internet is now
+https://github.com/danielsdeleo/deep_merge
 
 Copyright (c) 2008 Steve Midgley, released under the MIT license
+
