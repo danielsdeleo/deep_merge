@@ -560,6 +560,30 @@ class TestDeepMerge < Test::Unit::TestCase
     DeepMerge::deep_merge!(hash_src, hash_dst)
     assert_equal({"item" => [{"3" => "5"}, {"1" => "3"}, {"2" => "4"}]}, hash_dst)
 
+    ######################################
+    # tests for "merge_hash_arrays" option
+
+    hash_src = {"item" => [{"1" => "3"}]}
+    hash_dst = {"item" => [{"3" => "5"}]}
+    DeepMerge::deep_merge!(hash_src, hash_dst, {:merge_hash_arrays => true})
+    assert_equal({"item" => [{"3" => "5", "1" => "3"}]}, hash_dst)
+
+    hash_src = {"item" => [{"1" => "3"}, {"2" => "4"}]}
+    hash_dst = {"item" => [{"3" => "5"}]}
+    DeepMerge::deep_merge!(hash_src, hash_dst, {:merge_hash_arrays => true})
+    assert_equal({"item" => [{"3" => "5", "1" => "3"}, {"2" => "4"}]}, hash_dst)
+
+    hash_src = {"item" => [{"1" => "3"}]}
+    hash_dst = {"item" => [{"3" => "5"}, {"2" => "4"}]}
+    DeepMerge::deep_merge!(hash_src, hash_dst, {:merge_hash_arrays => true})
+    assert_equal({"item" => [{"3" => "5", "1" => "3"}, {"2" => "4"}]}, hash_dst)
+
+    # if arrays contain non-hash objects, the :merge_hash_arrays option has
+    # no effect.
+    hash_src = {"item" => [{"1" => "3"}, "str"]}  # contains "str", non-hash
+    hash_dst = {"item" => [{"3" => "5"}]}
+    DeepMerge::deep_merge!(hash_src, hash_dst, {:merge_hash_arrays => true})
+    assert_equal({"item" => [{"3" => "5"}, {"1" => "3"}, "str"]}, hash_dst)
 
     # Merging empty strings
     s1, s2 = "hello", ""
