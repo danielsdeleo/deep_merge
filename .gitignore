@@ -1,3 +1,2 @@
 pkg/*
-*.gemspec
 .rake_tasks~

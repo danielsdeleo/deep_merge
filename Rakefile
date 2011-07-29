@@ -1,20 +1,17 @@
+require 'rake/testtask'
+
+Rake::TestTask.new do |t|
+  t.libs << FileList['lib/**.rb']
+  t.test_files = FileList['test/test*.rb']
+end
 
 begin
   require 'rubygems'
+  require 'rubygems/package_task'
+
+  gemspec = eval(IO.read('deep_merge.gemspec'))
+  Gem::PackageTask.new(gemspec).define
 rescue LoadError
   #okay, then
 end
 
-begin
-  require 'jeweler'
-  Jeweler::Tasks.new do |gemspec|
-    gemspec.name = "deep_merge"
-    gemspec.summary = "Merge Deeply Nested Hashes"
-    gemspec.description = "The Peritor Fork of deep_merge, with Ruby 1.9 and ActiveSupport Compatibility"
-    gemspec.email = "kontakt@peritor.com"
-    gemspec.homepage = "http://github.com/peritor/deep_merge"
-    gemspec.authors = ["Steve Midgley"]
-  end
-rescue LoadError
-  puts "Jeweler not available. Install it with: sudo gem install jeweler"
-end
