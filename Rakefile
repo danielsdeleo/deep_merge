@@ -5,6 +5,8 @@ Rake::TestTask.new do |t|
   t.test_files = FileList['test/test*.rb']
 end
 
+task :default => :test
+
 begin
   require 'rubygems'
   require 'rubygems/package_task'
