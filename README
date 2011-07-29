@@ -42,6 +42,8 @@ Deep Merge Core Documentation
       Set to true to sort all arrays that are merged together
    :unpack_arrays          DEFAULT: nil
       Set to string value to run "Array::join" then "String::split" against all arrays
+   :merge_hash_arrays      DEFAULT: false
+      Set to true to merge hashes within arrays
    :merge_debug            DEFAULT: false
       Set to true to get console output of merge process for debugging
 
@@ -66,6 +68,11 @@ Deep Merge Core Documentation
    Results: {:x => ['1','2','3','4','5','6','7','8'}
    Why: If receiving data from an HTML form, this makes it easy for a checkbox 
     to pass multiple values from within a single HTML element
+ :merge_hash_arrays => merge hashes within arrays
+   source = {:x => [{:y => 1}]}
+   dest   = {:x => [{:z => 2}]}
+   dest.deep_merge!(source, {:merge_hash_arrays => true})
+   Results: {:x => [{:y => 1, :z => 2}]}
  
  There are many tests for this library - and you can learn more about the features
  and usages of deep_merge! by just browsing the test examples
