@@ -82,6 +82,9 @@ Using deep_merge in Rails
 To avoid conflict with ActiveSupport, load deep_merge via:
   require 'deep_merge/rails_compat'
 
+In a Gemfile:
+  gem "deep_merge", :require => 'deep_merge/rails_compat'
+
 The deep_merge methods will then be defined as
   Hash#deeper_merge
   Hash#deeper_merge!
