@@ -64,7 +64,13 @@ module DeepMerge
   #   dest   = {:x => [{:z => 2}]}
   #   dest.deep_merge!(source, {:merge_hash_arrays => true})
   #   Results: {:x => [{:y => 1, :z => 2}]}
-  # 
+  #
+  # :keep_array_duplicates => merges arrays within hashes but keeps duplicate elements
+  #   source = {:x => {:y => [1,2,2,2,3]}}
+  #   dest   = {:x => {:y => [4,5,6]}}
+  #   dest.deep_merge!(source, {:keep_array_duplicates => true})
+  #   Results: {:x => {:y => [1,2,2,2,3,4,5,6]}}
+  #
   # There are many tests for this library - and you can learn more about the features
   # and usages of deep_merge! by just browsing the test examples
   def self.deep_merge!(source, dest, options = {})
@@ -84,6 +90,8 @@ module DeepMerge
     merge_hash_arrays = options[:merge_hash_arrays] || false
     # request to extend existing arrays, instead of overwriting them
     extend_existing_arrays = options[:extend_existing_arrays] || false
+    # request that arrays keep duplicate elements
+    keep_array_duplicates = options[:keep_array_duplicates] || false
 
     di = options[:debug_indent] || ''
     # do nothing if source is nil
@@ -168,6 +176,8 @@ module DeepMerge
             end
             list += source[dest.count..-1] if source.count > dest.count
             dest = list
+          elsif keep_array_duplicates
+            dest = dest.concat(source)
           else
             dest = dest | source
           end
