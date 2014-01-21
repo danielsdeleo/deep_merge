@@ -10,11 +10,11 @@ Gem::Specification.new do |s|
   s.email = %q{dan@kallistec.com}
   s.license = 'MIT'
   s.extra_rdoc_files = [
-    "README"
+    "README.md"
   ]
   s.files = [
     "CHANGELOG",
-    "README",
+    "README.md",
     "Rakefile",
     "VERSION",
     "lib/deep_merge.rb",
@@ -29,6 +29,8 @@ Gem::Specification.new do |s|
   s.test_files = [
     "test/test_deep_merge.rb"
   ]
+
+  s.add_development_dependency "rake", "~> 10.1"
 
 end
 

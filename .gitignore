@@ -1,2 +1,4 @@
 pkg/*
 .rake_tasks~
+Gemfile.lock
+.bundle
