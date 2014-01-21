@@ -123,7 +123,7 @@ module DeepMerge
         end
       end
       # if there's a naked knockout_prefix in source, that means we are to truncate dest
-      if source.index(knockout_prefix)
+      if knockout_prefix && source.index(knockout_prefix)
         dest = clear_or_nil(dest); source.delete(knockout_prefix)
       end
       if dest.kind_of?(Array)

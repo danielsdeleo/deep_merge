@@ -201,6 +201,18 @@ class TestDeepMerge < Test::Unit::TestCase
     DeepMerge::deep_merge!(hash_src, hash_dst)
     assert_equal({"property" => {"bedroom_count" => {2=>3, "king_bed" => [3]}, "bathroom_count" => ["1"]}}, hash_dst)
 
+    # 3 hash layers holding arrays of int, but source includes a nil in the array
+    hash_src = {"property" => {"bedroom_count" => {"king_bed" => [nil], "queen_bed" => [1, nil]}, "bathroom_count" => [nil, "1"]}}
+    hash_dst = {"property" => {"bedroom_count" => {"king_bed" => [2], "queen_bed" => [4]}, "bathroom_count" => ["2"]}}
+    DeepMerge::deep_merge!(hash_src, hash_dst)
+    assert_equal({"property" => {"bedroom_count" => {"king_bed" => [2,nil], "queen_bed" => [4, 1, nil]}, "bathroom_count" => ["2", nil, "1"]}}, hash_dst)
+
+    # 3 hash layers holding arrays of int, but destination includes a nil in the array
+    hash_src = {"property" => {"bedroom_count" => {"king_bed" => [3], "queen_bed" => [1]}, "bathroom_count" => ["1"]}}
+    hash_dst = {"property" => {"bedroom_count" => {"king_bed" => [nil], "queen_bed" => [4, nil]}, "bathroom_count" => [nil,"2"]}}
+    DeepMerge::deep_merge!(hash_src, hash_dst)
+    assert_equal({"property" => {"bedroom_count" => {"king_bed" => [nil, 3], "queen_bed" => [4, nil, 1]}, "bathroom_count" => [nil, "2", "1"]}}, hash_dst)
+
     # test parameter management for knockout_prefix and overwrite unmergable
     assert_raise(DeepMerge::InvalidParameter) {DeepMerge::deep_merge!(hash_src, hash_dst, {:knockout_prefix => ""})}
     assert_raise(DeepMerge::InvalidParameter) {DeepMerge::deep_merge!(hash_src, hash_dst, {:preserve_unmergeables => true, :knockout_prefix => ""})}
