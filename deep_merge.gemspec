@@ -16,7 +16,6 @@ Gem::Specification.new do |s|
     "CHANGELOG",
     "README.md",
     "Rakefile",
-    "VERSION",
     "lib/deep_merge.rb",
     "lib/deep_merge/core.rb",
     "lib/deep_merge/deep_merge_hash.rb",
