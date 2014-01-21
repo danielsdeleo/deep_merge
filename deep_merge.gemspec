@@ -8,6 +8,7 @@ Gem::Specification.new do |s|
   s.date = %q{2011-07-28}
   s.description = %q{Recursively merge hashes. Now works with Ruby 1.9 and ActiveSupport}
   s.email = %q{dan@kallistec.com}
+  s.license = 'MIT'
   s.extra_rdoc_files = [
     "README"
   ]
