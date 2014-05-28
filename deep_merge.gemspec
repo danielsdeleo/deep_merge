@@ -29,6 +29,7 @@ Gem::Specification.new do |s|
     "test/test_deep_merge.rb"
   ]
 
+  s.add_development_dependency "minitest"
   s.add_development_dependency "rake", "~> 10.1"
 
 end
