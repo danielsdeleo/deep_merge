@@ -10,6 +10,7 @@ Gem::Specification.new do |s|
   s.email = %q{dan@kallistec.com}
   s.license = 'MIT'
   s.extra_rdoc_files = [
+    "LICENSE",
     "README.md"
   ]
   s.files = [
