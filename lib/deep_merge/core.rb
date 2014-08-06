@@ -108,6 +108,8 @@ module DeepMerge
             end
             dest[src_key] = deep_merge!(src_value, src_dup, options.merge(:debug_indent => di + '  '))
           end
+        elsif dest.kind_of?(Array) && extend_existing_arrays
+          dest.push(source)
         else # dest isn't a hash, so we overwrite it completely (if permitted)
           if overwrite_unmergeable
             puts "#{di}  overwriting dest: #{src_key.inspect} => #{src_value.inspect} -over->  #{dest.inspect}" if merge_debug
