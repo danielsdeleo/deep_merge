@@ -213,11 +213,17 @@ class TestDeepMerge < Test::Unit::TestCase
     DeepMerge::deep_merge!(hash_src, hash_dst)
     assert_equal({"property" => {"bedroom_count" => {"king_bed" => [nil, 3], "queen_bed" => [4, nil, 1]}, "bathroom_count" => [nil, "2", "1"]}}, hash_dst)
 
-    # if destination element is an array and source element is not, push source element to destination array
+    # if extend_existig_arrays == true && destination.kind_of?(Array) && source element is neither array nor hash, push source to destionation
     hash_src = { "property" => "4" }
     hash_dst = { "property" => ["1", "2", "3"] }
     DeepMerge::deep_merge!(hash_src, hash_dst, :extend_existing_arrays => true)
     assert_equal({"property" => ["1", "2", "3", "4"]}, hash_dst)
+
+    # if extend_existig_arrays == true && destination.kind_of?(Array) && source.kind_of(Hash), push source to destionation
+    hash_src = { "property" => {:number => "3"} }
+    hash_dst = { "property" => [{:number => "1"}, {:number => "2"}] }
+    DeepMerge::deep_merge!(hash_src, hash_dst, :extend_existing_arrays => true)
+    assert_equal({"property"=>[{:number=>"1"}, {:number=>"2"}, {:number=>"3"}]}, hash_dst)
 
     # test parameter management for knockout_prefix and overwrite unmergable
     assert_raise(DeepMerge::InvalidParameter) {DeepMerge::deep_merge!(hash_src, hash_dst, {:knockout_prefix => ""})}
