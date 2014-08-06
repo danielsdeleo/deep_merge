@@ -216,7 +216,7 @@ class TestDeepMerge < Test::Unit::TestCase
     # if destination element is an array and source element is not, push source element to destination array
     hash_src = { "property" => "4" }
     hash_dst = { "property" => ["1", "2", "3"] }
-    DeepMerge::deep_merge!(hash_src, hash_dst, extend_existing_arrays: true)
+    DeepMerge::deep_merge!(hash_src, hash_dst, :extend_existing_arrays => true)
     assert_equal({"property" => ["1", "2", "3", "4"]}, hash_dst)
 
     # test parameter management for knockout_prefix and overwrite unmergable
