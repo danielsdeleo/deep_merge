@@ -35,6 +35,8 @@ Options are specified in the last parameter passed, which should be in hash form
       Set to string value to run "Array::join" then "String::split" against all arrays
     :merge_hash_arrays      DEFAULT: false
       Set to true to merge hashes within arrays
+    :extend_existing_arrays DEFAULT: false
+      Set to true to extend existing arrays, instead of overwriting them
     :merge_debug            DEFAULT: false
       Set to true to get console output of merge process for debugging
 
@@ -76,6 +78,15 @@ merge hashes within arrays
     dest   = {:x => [{:z => 2}]}
     dest.deep_merge!(source, {:merge_hash_arrays => true})
     Results: {:x => [{:y => 1, :z => 2}]}
+
+**:extend_existing_arrays**
+
+Push src elements to existing arrays, instead of overwriting them.
+
+    source = { "property" => "4" }
+    dest   = { "property" => ["1", "2", "3"] }
+    dest.deep_merge!(source, {:extend_existing_arrays => true})
+    Results: {"property" => ["1", "2", "3", "4"]}
 
 There are many tests for this library - and you can learn more about the features and usages of deep_merge! by just browsing the test examples.
 

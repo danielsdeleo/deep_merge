@@ -78,6 +78,9 @@ module DeepMerge
     sort_merged_arrays = options[:sort_merged_arrays] || false
     # request that arrays of hashes are merged together
     merge_hash_arrays = options[:merge_hash_arrays] || false
+    # request to extend existing arrays, instead of overwriting them
+    extend_existing_arrays = options[:extend_existing_arrays] || false
+
     di = options[:debug_indent] || ''
     # do nothing if source is nil
     return dest if source.nil?
@@ -164,8 +167,12 @@ module DeepMerge
         dest = overwrite_unmergeables(source, dest, options)
       end
     else # src_hash is not an array or hash, so we'll have to overwrite dest
-      puts "#{di}Others: #{source.inspect} :: #{dest.inspect}" if merge_debug
-      dest = overwrite_unmergeables(source, dest, options)
+      if dest.kind_of?(Array) && extend_existing_arrays
+        dest.push(source)
+      else
+        puts "#{di}Others: #{source.inspect} :: #{dest.inspect}" if merge_debug
+        dest = overwrite_unmergeables(source, dest, options)
+      end
     end
     puts "#{di}Returning #{dest.inspect}" if merge_debug
     dest
