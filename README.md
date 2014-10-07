@@ -29,6 +29,8 @@ Options are specified in the last parameter passed, which should be in hash form
       Set to true to skip any unmergeable elements from source
     :knockout_prefix        DEFAULT: nil
       Set to string value to signify prefix which deletes elements from existing element
+    :preserve_knockout      DEFAULT: false
+      Set to true to preserve the knockout element from the source
     :sort_merged_arrays     DEFAULT: false
       Set to true to sort all arrays that are merged together
     :unpack_arrays          DEFAULT: nil
@@ -56,6 +58,21 @@ Additionally, if the knockout_prefix is passed alone as a string, it will cause 
     dest   = {:x => [1,2,3]}
     dest.ko_deep_merge!(source)
     Results: {:x => ""}
+
+**:preserve_knockout**
+The purpose of this is to provide a way to preserve knockout element from the incoming hash if element is not in the dest. Setting this option to true will preserve the knockout element from source in the result:
+
+    source = {:x => ['--1', '2']}
+    dest   = {:x => ['3', '4']}
+    dest.ko_deep_merge!(source)
+    Results: {:x => ['--1','2','3','4']}
+
+If the element is in the dest, the knockout element will be removed from source
+
+    source = {:x => ['--1', '2']}
+    dest   = {:x => ['1','3', '4']}
+    dest.ko_deep_merge!(source)
+    Results: {:x => ['2','3','4']}
 
 **:unpack_arrays**
 

@@ -26,6 +26,8 @@ module DeepMerge
   #      Set to true to skip any unmergeable elements from source
   #   :knockout_prefix        DEFAULT: nil
   #      Set to string value to signify prefix which deletes elements from existing element
+  #   :preserve_knockout      DEFAULT: false
+  #      Set to true to preserve the knockout element from the source
   #   :sort_merged_arrays     DEFAULT: false
   #      Set to true to sort all arrays that are merged together
   #   :unpack_arrays          DEFAULT: nil
@@ -48,6 +50,18 @@ module DeepMerge
   #    dest   = {:x => [1,2,3]}
   #    dest.ko_deep_merge!(source)
   #    Results: {:x => ""}
+  # :preserve_knockout => The purpose of this is to provide a way to preserve
+  #   knockout element from the incoming hash if element is not in the dest. Setting
+  #   this option to true will preserve the knockout element from source in the result:
+  #    source = {:x => ['--1', '2']}
+  #    dest   = {:x => ['3', '4']}
+  #    dest.ko_deep_merge!(source)
+  #    Results: {:x => ['--1','2','3','4']}
+  #   If the element is in the dest, the knockout element will be removed from source
+  #    source = {:x => ['--1', '2']}
+  #    dest   = {:x => ['1','3', '4']}
+  #    dest.ko_deep_merge!(source)
+  #    Results: {:x => ['2','3','4']}
   # :unpack_arrays => The purpose of this is to permit compound elements to be passed
   #   in as strings and to be converted into discrete array elements
   #   irsource = {:x => ['1,2,3', '4']}
@@ -70,6 +84,7 @@ module DeepMerge
     merge_debug = options[:merge_debug] || false
     overwrite_unmergeable = !options[:preserve_unmergeables]
     knockout_prefix = options[:knockout_prefix] || nil
+    preserve_knockout = options[:preserve_knockout] || false
     raise InvalidParameter, "knockout_prefix cannot be an empty string in deep_merge!" if knockout_prefix == ""
     raise InvalidParameter, "overwrite_unmergeable must be true if knockout_prefix is specified in deep_merge!" if knockout_prefix && !overwrite_unmergeable
     # if present: we will split and join arrays on this char before merging
@@ -135,9 +150,8 @@ module DeepMerge
             item = ko_item.respond_to?(:gsub) ? ko_item.gsub(%r{^#{knockout_prefix}}, "") : ko_item
             if item != ko_item
               print "#{ko_item} - " if merge_debug
-              dest.delete(item)
+              retval = dest.delete(item) || !preserve_knockout
               dest.delete(ko_item)
-              retval = true
             end
             retval
           end
