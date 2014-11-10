@@ -216,9 +216,12 @@ class TestDeepMerge < Test::Unit::TestCase
     # test parameter management for knockout_prefix and overwrite unmergable
     assert_raise(DeepMerge::InvalidParameter) {DeepMerge::deep_merge!(hash_src, hash_dst, {:knockout_prefix => ""})}
     assert_raise(DeepMerge::InvalidParameter) {DeepMerge::deep_merge!(hash_src, hash_dst, {:preserve_unmergeables => true, :knockout_prefix => ""})}
+    assert_raise(DeepMerge::InvalidParameter) {DeepMerge::deep_merge!(hash_src, hash_dst, {:preserve_knockout => true, :knockout_prefix => ""})}
     assert_raise(DeepMerge::InvalidParameter) {DeepMerge::deep_merge!(hash_src, hash_dst, {:preserve_unmergeables => true, :knockout_prefix => "--"})}
     assert_nothing_raised(DeepMerge::InvalidParameter) {DeepMerge::deep_merge!(hash_src, hash_dst, {:knockout_prefix => "--"})}
+    assert_nothing_raised(DeepMerge::InvalidParameter) {DeepMerge::deep_merge!(hash_src, hash_dst, {:preserve_knockout => true, :knockout_prefix => "--"})}
     assert_nothing_raised(DeepMerge::InvalidParameter) {DeepMerge::deep_merge!(hash_src, hash_dst)}
+    assert_nothing_raised(DeepMerge::InvalidParameter) {DeepMerge::deep_merge!(hash_src, hash_dst, {:preserve_knockout => true})}
     assert_nothing_raised(DeepMerge::InvalidParameter) {DeepMerge::deep_merge!(hash_src, hash_dst, {:preserve_unmergeables => true})}
 
     # hash holding arrays of arrays
@@ -281,328 +284,401 @@ class TestDeepMerge < Test::Unit::TestCase
       assert_equal({"amenity"=>{"id"=>["3","4"]}}, hash_session)
     end
 
+    # Retest knockout logic with the knockout pass-through turned on
+    [nil, ","].each do |ko_split|
+      # typical params/session style hash with knockout_merge elements
+      # With preserve_knockout enabled, if the ko_item in source array matches an item in the
+      # destination array, the behavior should match preserve_knockout disabled
+      hash_params = {"property"=>{"bedroom_count"=>[FIELD_KNOCKOUT_PREFIX+"1", "2", "3"]}}
+      hash_session = {"property"=>{"bedroom_count"=>["1", "2", "3"]}}
+      DeepMerge::deep_merge!(hash_params, hash_session, {:preserve_knockout => true, :knockout_prefix => FIELD_KNOCKOUT_PREFIX, :unpack_arrays => ko_split})
+      assert_equal({"property"=>{"bedroom_count"=>["2", "3"]}}, hash_session)
+
+      # typical params/session style hash with knockout_merge elements
+      # With preserve_knockout enabled, if the ko_item in source array does not match an item
+      # in the destination array, the ko_item should end up in the result array
+      hash_params = {"property"=>{"bedroom_count"=>[FIELD_KNOCKOUT_PREFIX+"1", "2", "3"]}}
+      hash_session = {"property"=>{"bedroom_count"=>["3"]}}
+      DeepMerge::deep_merge!(hash_params, hash_session, {:preserve_knockout => true, :knockout_prefix => FIELD_KNOCKOUT_PREFIX, :unpack_arrays => ko_split})
+      assert_equal({"property"=>{"bedroom_count"=>["3",FIELD_KNOCKOUT_PREFIX+"1","2"]}}, hash_session)
+
+      # typical params/session style hash with knockout_merge elements
+      hash_params = {"property"=>{"bedroom_count"=>[FIELD_KNOCKOUT_PREFIX+"1", "2", "3"]}}
+      hash_session = {"property"=>{"bedroom_count"=>["4"]}}
+      DeepMerge::deep_merge!(hash_params, hash_session, {:preserve_knockout => true, :knockout_prefix => FIELD_KNOCKOUT_PREFIX, :unpack_arrays => ko_split})
+      assert_equal({"property"=>{"bedroom_count"=>["4",FIELD_KNOCKOUT_PREFIX+"1","2","3"]}}, hash_session)
+
+      # typical params/session style hash with knockout_merge elements
+      # With preserve_knockout enabled, if the ko_item is in both the source array and the
+      # the destination array, the ko_item should end up in the result array only once
+      hash_params = {"property"=>{"bedroom_count"=>[FIELD_KNOCKOUT_PREFIX+"1", "2", "3"]}}
+      hash_session = {"property"=>{"bedroom_count"=>[FIELD_KNOCKOUT_PREFIX+"1", "4"]}}
+      DeepMerge::deep_merge!(hash_params, hash_session, {:preserve_knockout => true, :knockout_prefix => FIELD_KNOCKOUT_PREFIX, :unpack_arrays => ko_split})
+      assert_equal({"property"=>{"bedroom_count"=>["4",FIELD_KNOCKOUT_PREFIX+"1","2","3"]}}, hash_session)
+
+      # typical params/session style hash with knockout_merge elements
+      hash_params = {"amenity"=>{"id"=>[FIELD_KNOCKOUT_PREFIX+"1", FIELD_KNOCKOUT_PREFIX+"2", "3", "4"]}}
+      hash_session = {"amenity"=>{"id"=>["1", "2"]}}
+      DeepMerge::deep_merge!(hash_params, hash_session, {:preserve_knockout => true, :knockout_prefix => FIELD_KNOCKOUT_PREFIX, :unpack_arrays => ko_split})
+      assert_equal({"amenity"=>{"id"=>["3","4"]}}, hash_session)
+    end
+
     # special params/session style hash with knockout_merge elements in form src: ["1","2"] dest:["--1,--2", "3,4"]
-    hash_params = {"amenity"=>{"id"=>[FIELD_KNOCKOUT_PREFIX+"1,"+FIELD_KNOCKOUT_PREFIX+"2", "3,4"]}}
-    hash_session = {"amenity"=>{"id"=>["1", "2"]}}
+    hash_params = {"amenity"=>{"id"=>["1", "2"]}}
+    hash_session = {"amenity"=>{"id"=>[FIELD_KNOCKOUT_PREFIX+"1,"+FIELD_KNOCKOUT_PREFIX+"2", "3,4"]}}
     DeepMerge::deep_merge!(hash_params, hash_session, {:knockout_prefix => FIELD_KNOCKOUT_PREFIX, :unpack_arrays => ","})
+    assert_equal({"amenity"=>{"id"=>[FIELD_KNOCKOUT_PREFIX+"1",FIELD_KNOCKOUT_PREFIX+"2","3","4","1","2"]}}, hash_session)
+
+    # special params/session style hash with knockout_merge elements in form src: ["1","2"] dest:["--1,--2", "3,4"]
+    # With preserve_knockout enabled, if the ko_item is in the dest array, it should be knocked
+    # out of the source array
+    hash_params = {"amenity"=>{"id"=>["1", "2"]}}
+    hash_session = {"amenity"=>{"id"=>[FIELD_KNOCKOUT_PREFIX+"1,"+FIELD_KNOCKOUT_PREFIX+"2", "3,4"]}}
+    DeepMerge::deep_merge!(hash_params, hash_session, {:preserve_knockout => true, :knockout_prefix => FIELD_KNOCKOUT_PREFIX, :unpack_arrays => ","})
     assert_equal({"amenity"=>{"id"=>["3","4"]}}, hash_session)
 
     # same as previous but without ko_split value, this merge should fail
-    hash_params = {"amenity"=>{"id"=>[FIELD_KNOCKOUT_PREFIX+"1,"+FIELD_KNOCKOUT_PREFIX+"2", "3,4"]}}
-    hash_session = {"amenity"=>{"id"=>["1", "2"]}}
+    hash_params = {"amenity"=>{"id"=>["1", "2"]}}
+    hash_session = {"amenity"=>{"id"=>[FIELD_KNOCKOUT_PREFIX+"1,"+FIELD_KNOCKOUT_PREFIX+"2", "3,4"]}}
     DeepMerge::deep_merge!(hash_params, hash_session, {:knockout_prefix => FIELD_KNOCKOUT_PREFIX})
-    assert_equal({"amenity"=>{"id"=>["1","2","3,4"]}}, hash_session)
+    assert_equal({"amenity"=>{"id"=>[FIELD_KNOCKOUT_PREFIX+"1,"+FIELD_KNOCKOUT_PREFIX+"2","3,4","1","2"]}}, hash_session)
 
-    # special params/session style hash with knockout_merge elements in form src: ["1","2"] dest:["--1,--2", "3,4"]
+    # same as previous but without ko_split value, this merge should fail
+    # With preserve_knockout enabled, the behavior should not change
+    hash_params = {"amenity"=>{"id"=>["1", "2"]}}
+    hash_session = {"amenity"=>{"id"=>[FIELD_KNOCKOUT_PREFIX+"1,"+FIELD_KNOCKOUT_PREFIX+"2", "3,4"]}}
+    DeepMerge::deep_merge!(hash_params, hash_session, {:preserve_knockout => true, :knockout_prefix => FIELD_KNOCKOUT_PREFIX})
+    assert_equal({"amenity"=>{"id"=>[FIELD_KNOCKOUT_PREFIX+"1,"+FIELD_KNOCKOUT_PREFIX+"2","3,4","1","2"]}}, hash_session)
+
+    # special params/session style hash with knockout_merge elements in form src:["--1,2", "3,4", "--5", "6"] dest: ["1","2"]
     hash_params = {"amenity"=>{"id"=>[FIELD_KNOCKOUT_PREFIX+"1,2", "3,4", "--5", "6"]}}
     hash_session = {"amenity"=>{"id"=>["1", "2"]}}
     DeepMerge::deep_merge!(hash_params, hash_session, {:knockout_prefix => FIELD_KNOCKOUT_PREFIX, :unpack_arrays => ","})
     assert_equal({"amenity"=>{"id"=>["2","3","4","6"]}}, hash_session)
 
+    # special params/session style hash with knockout_merge elements in form src:["--1,2", "3,4", "--5", "6"] dest: ["1","2"]
+    # With preserve_knockout enabled, --5 should pass through to dest array
+    hash_params = {"amenity"=>{"id"=>[FIELD_KNOCKOUT_PREFIX+"1,2", "3,4", "--5", "6"]}}
+    hash_session = {"amenity"=>{"id"=>["1", "2"]}}
+    DeepMerge::deep_merge!(hash_params, hash_session, {:preserve_knockout => true, :knockout_prefix => FIELD_KNOCKOUT_PREFIX, :unpack_arrays => ","})
+    assert_equal({"amenity"=>{"id"=>["2","3","4","--5","6"]}}, hash_session)
+
     # special params/session style hash with knockout_merge elements in form src: ["--1,--2", "3,4", "--5", "6"] dest:["1,2", "3,4"]
     hash_params = {"amenity"=>{"id"=>["#{FIELD_KNOCKOUT_PREFIX}1,#{FIELD_KNOCKOUT_PREFIX}2", "3,4", "#{FIELD_KNOCKOUT_PREFIX}5", "6"]}}
-    hash_session = {"amenity"=>{"id"=>["1", "2", "3", "4"]}}
+    hash_session = {"amenity"=>{"id"=>["1,2", "3,4"]}}
     DeepMerge::deep_merge!(hash_params, hash_session, {:knockout_prefix => FIELD_KNOCKOUT_PREFIX, :unpack_arrays => ","})
     assert_equal({"amenity"=>{"id"=>["3","4","6"]}}, hash_session)
 
+    # special params/session style hash with knockout_merge elements in form src: ["--1,--2", "3,4", "--5", "6"] dest:["1,2", "3,4"]
+    # With preserve_knockout enabled, --5 should pass through to dest array
+    hash_params = {"amenity"=>{"id"=>["#{FIELD_KNOCKOUT_PREFIX}1,#{FIELD_KNOCKOUT_PREFIX}2", "3,4", "#{FIELD_KNOCKOUT_PREFIX}5", "6"]}}
+    hash_session = {"amenity"=>{"id"=>["1,2", "3,4"]}}
+    DeepMerge::deep_merge!(hash_params, hash_session, {:preserve_knockout => true, :knockout_prefix => FIELD_KNOCKOUT_PREFIX, :unpack_arrays => ","})
+    assert_equal({"amenity"=>{"id"=>["3","4","--5","6"]}}, hash_session)
 
-    hash_src = {"url_regions"=>[], "region"=>{"ids"=>["227,233"]}, "action"=>"browse", "task"=>"browse", "controller"=>"results"}
-    hash_dst = {"region"=>{"ids"=>["227"]}}
-    DeepMerge::deep_merge!(hash_src.dup, hash_dst, {:overwrite_unmergeables => true, :knockout_prefix => FIELD_KNOCKOUT_PREFIX, :unpack_arrays => ","})
-    assert_equal({"url_regions"=>[], "region"=>{"ids"=>["227","233"]}, "action"=>"browse", "task"=>"browse", "controller"=>"results"}, hash_dst)
+    [true,false].each do |preserve_ko|
+      hash_src = {"url_regions"=>[], "region"=>{"ids"=>["227,233"]}, "action"=>"browse", "task"=>"browse", "controller"=>"results"}
+      hash_dst = {"region"=>{"ids"=>["227"]}}
+      DeepMerge::deep_merge!(hash_src.dup, hash_dst, {:preserve_knockout => preserve_ko, :overwrite_unmergeables => true, :knockout_prefix => FIELD_KNOCKOUT_PREFIX, :unpack_arrays => ","})
+      assert_equal({"url_regions"=>[], "region"=>{"ids"=>["227","233"]}, "action"=>"browse", "task"=>"browse", "controller"=>"results"}, hash_dst)
 
-    hash_src = {"region"=>{"ids"=>["--","227"], "id"=>"230"}}
-    hash_dst = {"region"=>{"ids"=>["227", "233", "324", "230", "230"], "id"=>"230"}}
-    DeepMerge::deep_merge!(hash_src, hash_dst, {:overwrite_unmergeables => true, :knockout_prefix => FIELD_KNOCKOUT_PREFIX, :unpack_arrays => ","})
-    assert_equal({"region"=>{"ids"=>["227"], "id"=>"230"}}, hash_dst)
+      hash_src = {"region"=>{"ids"=>["--","227"], "id"=>"230"}}
+      hash_dst = {"region"=>{"ids"=>["227", "233", "324", "230", "230"], "id"=>"230"}}
+      DeepMerge::deep_merge!(hash_src, hash_dst, {:preserve_knockout => preserve_ko, :overwrite_unmergeables => true, :knockout_prefix => FIELD_KNOCKOUT_PREFIX, :unpack_arrays => ","})
+      assert_equal({"region"=>{"ids"=>["227"], "id"=>"230"}}, hash_dst)
 
-    hash_src = {"region"=>{"ids"=>["--","227", "232", "233"], "id"=>"232"}}
-    hash_dst = {"region"=>{"ids"=>["227", "233", "324", "230", "230"], "id"=>"230"}}
-    DeepMerge::deep_merge!(hash_src, hash_dst, {:overwrite_unmergeables => true, :knockout_prefix => FIELD_KNOCKOUT_PREFIX, :unpack_arrays => ","})
-    assert_equal({"region"=>{"ids"=>["227", "232", "233"], "id"=>"232"}}, hash_dst)
+      hash_src = {"region"=>{"ids"=>["--","227", "232", "233"], "id"=>"232"}}
+      hash_dst = {"region"=>{"ids"=>["227", "233", "324", "230", "230"], "id"=>"230"}}
+      DeepMerge::deep_merge!(hash_src, hash_dst, {:preserve_knockout => preserve_ko, :overwrite_unmergeables => true, :knockout_prefix => FIELD_KNOCKOUT_PREFIX, :unpack_arrays => ","})
+      assert_equal({"region"=>{"ids"=>["227", "232", "233"], "id"=>"232"}}, hash_dst)
 
-    hash_src = {"region"=>{"ids"=>["--,227,232,233"], "id"=>"232"}}
-    hash_dst = {"region"=>{"ids"=>["227", "233", "324", "230", "230"], "id"=>"230"}}
-    DeepMerge::deep_merge!(hash_src, hash_dst, {:overwrite_unmergeables => true, :knockout_prefix => FIELD_KNOCKOUT_PREFIX, :unpack_arrays => ","})
-    assert_equal({"region"=>{"ids"=>["227", "232", "233"], "id"=>"232"}}, hash_dst)
+      hash_src = {"region"=>{"ids"=>["--,227,232,233"], "id"=>"232"}}
+      hash_dst = {"region"=>{"ids"=>["227", "233", "324", "230", "230"], "id"=>"230"}}
+      DeepMerge::deep_merge!(hash_src, hash_dst, {:preserve_knockout => preserve_ko, :overwrite_unmergeables => true, :knockout_prefix => FIELD_KNOCKOUT_PREFIX, :unpack_arrays => ","})
+      assert_equal({"region"=>{"ids"=>["227", "232", "233"], "id"=>"232"}}, hash_dst)
 
-    hash_src = {"region"=>{"ids"=>["--,227,232","233"], "id"=>"232"}}
-    hash_dst = {"region"=>{"ids"=>["227", "233", "324", "230", "230"], "id"=>"230"}}
-    DeepMerge::deep_merge!(hash_src, hash_dst, {:overwrite_unmergeables => true, :knockout_prefix => FIELD_KNOCKOUT_PREFIX, :unpack_arrays => ","})
-    assert_equal({"region"=>{"ids"=>["227", "232", "233"], "id"=>"232"}}, hash_dst)
+      hash_src = {"region"=>{"ids"=>["--,227,232","233"], "id"=>"232"}}
+      hash_dst = {"region"=>{"ids"=>["227", "233", "324", "230", "230"], "id"=>"230"}}
+      DeepMerge::deep_merge!(hash_src, hash_dst, {:preserve_knockout => preserve_ko, :overwrite_unmergeables => true, :knockout_prefix => FIELD_KNOCKOUT_PREFIX, :unpack_arrays => ","})
+      assert_equal({"region"=>{"ids"=>["227", "232", "233"], "id"=>"232"}}, hash_dst)
 
-    hash_src = {"region"=>{"ids"=>["--,227"], "id"=>"230"}}
-    hash_dst = {"region"=>{"ids"=>["227", "233", "324", "230", "230"], "id"=>"230"}}
-    DeepMerge::deep_merge!(hash_src, hash_dst, {:overwrite_unmergeables => true, :knockout_prefix => FIELD_KNOCKOUT_PREFIX, :unpack_arrays => ","})
-    assert_equal({"region"=>{"ids"=>["227"], "id"=>"230"}}, hash_dst)
+      hash_src = {"region"=>{"ids"=>["--,227"], "id"=>"230"}}
+      hash_dst = {"region"=>{"ids"=>["227", "233", "324", "230", "230"], "id"=>"230"}}
+      DeepMerge::deep_merge!(hash_src, hash_dst, {:preserve_knockout => preserve_ko, :overwrite_unmergeables => true, :knockout_prefix => FIELD_KNOCKOUT_PREFIX, :unpack_arrays => ","})
+      assert_equal({"region"=>{"ids"=>["227"], "id"=>"230"}}, hash_dst)
 
-    hash_src = {"region"=>{"ids"=>["--,227"], "id"=>"230"}}
-    hash_dst = {"region"=>{"ids"=>["227", "233", "324", "230", "230"], "id"=>"230"}, "action"=>"browse", "task"=>"browse", "controller"=>"results", "property_order_by"=>"property_type.descr"}
-    DeepMerge::deep_merge!(hash_src, hash_dst, {:overwrite_unmergeables => true, :knockout_prefix => FIELD_KNOCKOUT_PREFIX, :unpack_arrays => ","})
-    assert_equal({"region"=>{"ids"=>["227"], "id"=>"230"}, "action"=>"browse", "task"=>"browse",
-      "controller"=>"results", "property_order_by"=>"property_type.descr"}, hash_dst)
+      hash_src = {"region"=>{"ids"=>["--,227"], "id"=>"230"}}
+      hash_dst = {"region"=>{"ids"=>["227", "233", "324", "230", "230"], "id"=>"230"}, "action"=>"browse", "task"=>"browse", "controller"=>"results", "property_order_by"=>"property_type.descr"}
+      DeepMerge::deep_merge!(hash_src, hash_dst, {:preserve_knockout => preserve_ko, :overwrite_unmergeables => true, :knockout_prefix => FIELD_KNOCKOUT_PREFIX, :unpack_arrays => ","})
+      assert_equal({"region"=>{"ids"=>["227"], "id"=>"230"}, "action"=>"browse", "task"=>"browse",
+                     "controller"=>"results", "property_order_by"=>"property_type.descr"}, hash_dst)
 
-    hash_src = {"query_uuid"=>"6386333d-389b-ab5c-8943-6f3a2aa914d7", "region"=>{"ids"=>["--,227"], "id"=>"230"}}
-    hash_dst = {"query_uuid"=>"6386333d-389b-ab5c-8943-6f3a2aa914d7", "url_regions"=>[], "region"=>{"ids"=>["227", "233", "324", "230", "230"], "id"=>"230"}, "action"=>"browse", "task"=>"browse", "controller"=>"results", "property_order_by"=>"property_type.descr"}
-    DeepMerge::deep_merge!(hash_src, hash_dst, {:overwrite_unmergeables => true, :knockout_prefix => FIELD_KNOCKOUT_PREFIX, :unpack_arrays => ","})
-    assert_equal({"query_uuid" => "6386333d-389b-ab5c-8943-6f3a2aa914d7", "url_regions"=>[],
-      "region"=>{"ids"=>["227"], "id"=>"230"}, "action"=>"browse", "task"=>"browse",
-      "controller"=>"results", "property_order_by"=>"property_type.descr"}, hash_dst)
+      hash_src = {"query_uuid"=>"6386333d-389b-ab5c-8943-6f3a2aa914d7", "region"=>{"ids"=>["--,227"], "id"=>"230"}}
+      hash_dst = {"query_uuid"=>"6386333d-389b-ab5c-8943-6f3a2aa914d7", "url_regions"=>[], "region"=>{"ids"=>["227", "233", "324", "230", "230"], "id"=>"230"}, "action"=>"browse", "task"=>"browse", "controller"=>"results", "property_order_by"=>"property_type.descr"}
+      DeepMerge::deep_merge!(hash_src, hash_dst, {:preserve_knockout => preserve_ko, :overwrite_unmergeables => true, :knockout_prefix => FIELD_KNOCKOUT_PREFIX, :unpack_arrays => ","})
+      assert_equal({"query_uuid" => "6386333d-389b-ab5c-8943-6f3a2aa914d7", "url_regions"=>[],
+                     "region"=>{"ids"=>["227"], "id"=>"230"}, "action"=>"browse", "task"=>"browse",
+                     "controller"=>"results", "property_order_by"=>"property_type.descr"}, hash_dst)
 
-    # knock out entire dest hash if "--" is passed for source
-    hash_params = {'amenity' => "--"}
-    hash_session = {"amenity" => "1"}
-    DeepMerge::deep_merge!(hash_params, hash_session, {:knockout_prefix => "--", :unpack_arrays => ","})
-    assert_equal({'amenity' => ""}, hash_session)
+      # knock out entire dest hash if "--" is passed for source
+      hash_params = {'amenity' => "--"}
+      hash_session = {"amenity" => "1"}
+      DeepMerge::deep_merge!(hash_params, hash_session, {:preserve_knockout => preserve_ko, :knockout_prefix => "--", :unpack_arrays => ","})
+      assert_equal({'amenity' => ""}, hash_session)
 
-    # knock out entire dest hash if "--" is passed for source
-    hash_params = {'amenity' => ["--"]}
-    hash_session = {"amenity" => "1"}
-    DeepMerge::deep_merge!(hash_params, hash_session, {:knockout_prefix => "--", :unpack_arrays => ","})
-    assert_equal({'amenity' => []}, hash_session)
+      # knock out entire dest hash if "--" is passed for source
+      hash_params = {'amenity' => ["--"]}
+      hash_session = {"amenity" => "1"}
+      DeepMerge::deep_merge!(hash_params, hash_session, {:preserve_knockout => preserve_ko, :knockout_prefix => "--", :unpack_arrays => ","})
+      assert_equal({'amenity' => []}, hash_session)
 
-    # knock out entire dest hash if "--" is passed for source
-    hash_params = {'amenity' => "--"}
-    hash_session = {"amenity" => ["1"]}
-    DeepMerge::deep_merge!(hash_params, hash_session, {:knockout_prefix => "--", :unpack_arrays => ","})
-    assert_equal({'amenity' => ""}, hash_session)
+      # knock out entire dest hash if "--" is passed for source
+      hash_params = {'amenity' => "--"}
+      hash_session = {"amenity" => ["1"]}
+      DeepMerge::deep_merge!(hash_params, hash_session, {:preserve_knockout => preserve_ko, :knockout_prefix => "--", :unpack_arrays => ","})
+      assert_equal({'amenity' => ""}, hash_session)
 
-    # knock out entire dest hash if "--" is passed for source
-    hash_params = {'amenity' => ["--"]}
-    hash_session = {"amenity" => ["1"]}
-    DeepMerge::deep_merge!(hash_params, hash_session, {:knockout_prefix => "--", :unpack_arrays => ","})
-    assert_equal({'amenity' => []}, hash_session)
+      # knock out entire dest hash if "--" is passed for source
+      hash_params = {'amenity' => ["--"]}
+      hash_session = {"amenity" => ["1"]}
+      DeepMerge::deep_merge!(hash_params, hash_session, {:preserve_knockout => preserve_ko, :knockout_prefix => "--", :unpack_arrays => ","})
+      assert_equal({'amenity' => []}, hash_session)
 
-    # knock out entire dest hash if "--" is passed for source
-    hash_params = {'amenity' => ["--"]}
-    hash_session = {"amenity" => "1"}
-    DeepMerge::deep_merge!(hash_params, hash_session, {:knockout_prefix => "--", :unpack_arrays => ","})
-    assert_equal({'amenity' => []}, hash_session)
+      # knock out entire dest hash if "--" is passed for source
+      hash_params = {'amenity' => ["--"]}
+      hash_session = {"amenity" => "1"}
+      DeepMerge::deep_merge!(hash_params, hash_session, {:preserve_knockout => preserve_ko, :knockout_prefix => "--", :unpack_arrays => ","})
+      assert_equal({'amenity' => []}, hash_session)
 
-    # knock out entire dest hash if "--" is passed for source
-    hash_params = {'amenity' => ["--", "2"]}
-    hash_session = {'amenity' => ["1", "3", "7+"]}
-    DeepMerge::deep_merge!(hash_params, hash_session, {:knockout_prefix => "--", :unpack_arrays => ","})
-    assert_equal({'amenity' => ["2"]}, hash_session)
+      # knock out entire dest hash if "--" is passed for source
+      hash_params = {'amenity' => ["--", "2"]}
+      hash_session = {'amenity' => ["1", "3", "7+"]}
+      DeepMerge::deep_merge!(hash_params, hash_session, {:preserve_knockout => preserve_ko, :knockout_prefix => "--", :unpack_arrays => ","})
+      assert_equal({'amenity' => ["2"]}, hash_session)
 
-    # knock out entire dest hash if "--" is passed for source
-    hash_params = {'amenity' => ["--", "2"]}
-    hash_session = {'amenity' => "5"}
-    DeepMerge::deep_merge!(hash_params, hash_session, {:knockout_prefix => "--", :unpack_arrays => ","})
-    assert_equal({'amenity' => ['2']}, hash_session)
+      # knock out entire dest hash if "--" is passed for source
+      hash_params = {'amenity' => ["--", "2"]}
+      hash_session = {'amenity' => "5"}
+      DeepMerge::deep_merge!(hash_params, hash_session, {:preserve_knockout => preserve_ko, :knockout_prefix => "--", :unpack_arrays => ","})
+      assert_equal({'amenity' => ['2']}, hash_session)
 
-    # knock out entire dest hash if "--" is passed for source
-    hash_params = {'amenity' => "--"}
-    hash_session = {"amenity"=>{"id"=>["1", "2", "3", "4"]}}
-    DeepMerge::deep_merge!(hash_params, hash_session, {:knockout_prefix => "--", :unpack_arrays => ","})
-    assert_equal({'amenity' => ""}, hash_session)
+      # knock out entire dest hash if "--" is passed for source
+      hash_params = {'amenity' => "--"}
+      hash_session = {"amenity"=>{"id"=>["1", "2", "3", "4"]}}
+      DeepMerge::deep_merge!(hash_params, hash_session, {:preserve_knockout => preserve_ko, :knockout_prefix => "--", :unpack_arrays => ","})
+      assert_equal({'amenity' => ""}, hash_session)
 
-    # knock out entire dest hash if "--" is passed for source
-    hash_params = {'amenity' => ["--"]}
-    hash_session = {"amenity"=>{"id"=>["1", "2", "3", "4"]}}
-    DeepMerge::deep_merge!(hash_params, hash_session, {:knockout_prefix => "--", :unpack_arrays => ","})
-    assert_equal({'amenity' => []}, hash_session)
+      # knock out entire dest hash if "--" is passed for source
+      hash_params = {'amenity' => ["--"]}
+      hash_session = {"amenity"=>{"id"=>["1", "2", "3", "4"]}}
+      DeepMerge::deep_merge!(hash_params, hash_session, {:preserve_knockout => preserve_ko, :knockout_prefix => "--", :unpack_arrays => ","})
+      assert_equal({'amenity' => []}, hash_session)
 
-    # knock out dest array if "--" is passed for source
-    hash_params = {"region" => {'ids' => FIELD_KNOCKOUT_PREFIX}}
-    hash_session = {"region"=>{"ids"=>["1", "2", "3", "4"]}}
-    DeepMerge::deep_merge!(hash_params, hash_session, {:knockout_prefix => FIELD_KNOCKOUT_PREFIX, :unpack_arrays => ","})
-    assert_equal({'region' => {'ids' => ""}}, hash_session)
+      # knock out dest array if "--" is passed for source
+      hash_params = {"region" => {'ids' => FIELD_KNOCKOUT_PREFIX}}
+      hash_session = {"region"=>{"ids"=>["1", "2", "3", "4"]}}
+      DeepMerge::deep_merge!(hash_params, hash_session, {:preserve_knockout => preserve_ko, :knockout_prefix => FIELD_KNOCKOUT_PREFIX, :unpack_arrays => ","})
+      assert_equal({'region' => {'ids' => ""}}, hash_session)
 
-    # knock out dest array but leave other elements of hash intact
-    hash_params = {"region" => {'ids' => FIELD_KNOCKOUT_PREFIX}}
-    hash_session = {"region"=>{"ids"=>["1", "2", "3", "4"], 'id'=>'11'}}
-    DeepMerge::deep_merge!(hash_params, hash_session, {:knockout_prefix => FIELD_KNOCKOUT_PREFIX, :unpack_arrays => ","})
-    assert_equal({'region' => {'ids' => "", 'id'=>'11'}}, hash_session)
+      # knock out dest array but leave other elements of hash intact
+      hash_params = {"region" => {'ids' => FIELD_KNOCKOUT_PREFIX}}
+      hash_session = {"region"=>{"ids"=>["1", "2", "3", "4"], 'id'=>'11'}}
+      DeepMerge::deep_merge!(hash_params, hash_session, {:preserve_knockout => preserve_ko, :knockout_prefix => FIELD_KNOCKOUT_PREFIX, :unpack_arrays => ","})
+      assert_equal({'region' => {'ids' => "", 'id'=>'11'}}, hash_session)
 
-    # knock out entire tree of dest hash
-    hash_params = {"region" => FIELD_KNOCKOUT_PREFIX}
-    hash_session = {"region"=>{"ids"=>["1", "2", "3", "4"], 'id'=>'11'}}
-    DeepMerge::deep_merge!(hash_params, hash_session, {:knockout_prefix => FIELD_KNOCKOUT_PREFIX, :unpack_arrays => ","})
-    assert_equal({'region' => ""}, hash_session)
+      # knock out entire tree of dest hash
+      hash_params = {"region" => FIELD_KNOCKOUT_PREFIX}
+      hash_session = {"region"=>{"ids"=>["1", "2", "3", "4"], 'id'=>'11'}}
+      DeepMerge::deep_merge!(hash_params, hash_session, {:preserve_knockout => preserve_ko, :knockout_prefix => FIELD_KNOCKOUT_PREFIX, :unpack_arrays => ","})
+      assert_equal({'region' => ""}, hash_session)
 
-    # knock out entire tree of dest hash - retaining array format
-    hash_params = {"region" => {'ids' => [FIELD_KNOCKOUT_PREFIX]}}
-    hash_session = {"region"=>{"ids"=>["1", "2", "3", "4"], 'id'=>'11'}}
-    DeepMerge::deep_merge!(hash_params, hash_session, {:knockout_prefix => FIELD_KNOCKOUT_PREFIX, :unpack_arrays => ","})
-    assert_equal({'region' => {'ids' => [], 'id'=>'11'}}, hash_session)
+      # knock out entire tree of dest hash - retaining array format
+      hash_params = {"region" => {'ids' => [FIELD_KNOCKOUT_PREFIX]}}
+      hash_session = {"region"=>{"ids"=>["1", "2", "3", "4"], 'id'=>'11'}}
+      DeepMerge::deep_merge!(hash_params, hash_session, {:preserve_knockout => preserve_ko, :knockout_prefix => FIELD_KNOCKOUT_PREFIX, :unpack_arrays => ","})
+      assert_equal({'region' => {'ids' => [], 'id'=>'11'}}, hash_session)
 
-    # knock out entire tree of dest hash & replace with new content
-    hash_params = {"region" => {'ids' => ["2", FIELD_KNOCKOUT_PREFIX, "6"]}}
-    hash_session = {"region"=>{"ids"=>["1", "2", "3", "4"], 'id'=>'11'}}
-    DeepMerge::deep_merge!(hash_params, hash_session, {:knockout_prefix => FIELD_KNOCKOUT_PREFIX, :unpack_arrays => ","})
-    assert_equal({'region' => {'ids' => ["2", "6"], 'id'=>'11'}}, hash_session)
+      # knock out entire tree of dest hash & replace with new content
+      hash_params = {"region" => {'ids' => ["2", FIELD_KNOCKOUT_PREFIX, "6"]}}
+      hash_session = {"region"=>{"ids"=>["1", "2", "3", "4"], 'id'=>'11'}}
+      DeepMerge::deep_merge!(hash_params, hash_session, {:preserve_knockout => preserve_ko, :knockout_prefix => FIELD_KNOCKOUT_PREFIX, :unpack_arrays => ","})
+      assert_equal({'region' => {'ids' => ["2", "6"], 'id'=>'11'}}, hash_session)
 
-    # knock out entire tree of dest hash & replace with new content
-    hash_params = {"region" => {'ids' => ["7", FIELD_KNOCKOUT_PREFIX, "6"]}}
-    hash_session = {"region"=>{"ids"=>["1", "2", "3", "4"], 'id'=>'11'}}
-    DeepMerge::deep_merge!(hash_params, hash_session, {:knockout_prefix => FIELD_KNOCKOUT_PREFIX, :unpack_arrays => ","})
-    assert_equal({'region' => {'ids' => ["7", "6"], 'id'=>'11'}}, hash_session)
+      # knock out entire tree of dest hash & replace with new content
+      hash_params = {"region" => {'ids' => ["7", FIELD_KNOCKOUT_PREFIX, "6"]}}
+      hash_session = {"region"=>{"ids"=>["1", "2", "3", "4"], 'id'=>'11'}}
+      DeepMerge::deep_merge!(hash_params, hash_session, {:preserve_knockout => preserve_ko, :knockout_prefix => FIELD_KNOCKOUT_PREFIX, :unpack_arrays => ","})
+      assert_equal({'region' => {'ids' => ["7", "6"], 'id'=>'11'}}, hash_session)
 
-    # edge test: make sure that when we turn off knockout_prefix that all values are processed correctly
-    hash_params = {"region" => {'ids' => ["7", "--", "2", "6,8"]}}
-    hash_session = {"region"=>{"ids"=>["1", "2", "3", "4"], 'id'=>'11'}}
-    DeepMerge::deep_merge!(hash_params, hash_session, {:unpack_arrays => ","})
-    assert_equal({'region' => {'ids' => ["1", "2", "3", "4", "7", "--", "6", "8"], 'id'=>'11'}}, hash_session)
+      # edge test: make sure that when we turn off knockout_prefix that all values are processed correctly
+      hash_params = {"region" => {'ids' => ["7", "--", "2", "6,8"]}}
+      hash_session = {"region"=>{"ids"=>["1", "2", "3", "4"], 'id'=>'11'}}
+      DeepMerge::deep_merge!(hash_params, hash_session, {:preserve_knockout => preserve_ko, :unpack_arrays => ","})
+      assert_equal({'region' => {'ids' => ["1", "2", "3", "4", "7", "--", "6", "8"], 'id'=>'11'}}, hash_session)
 
-    # edge test 2: make sure that when we turn off source array split that all values are processed correctly
-    hash_params = {"region" => {'ids' => ["7", "3", "--", "6,8"]}}
-    hash_session = {"region"=>{"ids"=>["1", "2", "3", "4"], 'id'=>'11'}}
-    DeepMerge::deep_merge!(hash_params, hash_session)
-    assert_equal({'region' => {'ids' => ["1", "2", "3", "4", "7", "--", "6,8"], 'id'=>'11'}}, hash_session)
+      # edge test 2: make sure that when we turn off source array split that all values are processed correctly
+      hash_params = {"region" => {'ids' => ["7", "3", "--", "6,8"]}}
+      hash_session = {"region"=>{"ids"=>["1", "2", "3", "4"], 'id'=>'11'}}
+      DeepMerge::deep_merge!(hash_params, hash_session, {:preserve_knockout => preserve_ko})
+      assert_equal({'region' => {'ids' => ["1", "2", "3", "4", "7", "--", "6,8"], 'id'=>'11'}}, hash_session)
 
-    # Example: src = {'key' => "--1"}, dst = {'key' => "1"} -> merges to {'key' => ""}
-    hash_params = {"amenity"=>"--1"}
-    hash_session = {"amenity"=>"1"}
-    DeepMerge::deep_merge!(hash_params, hash_session, {:knockout_prefix => FIELD_KNOCKOUT_PREFIX})
-    assert_equal({"amenity"=>""}, hash_session)
+      # Example: src = {'key' => "--1"}, dst = {'key' => "1"} -> merges to {'key' => ""}
+      hash_params = {"amenity"=>"--1"}
+      hash_session = {"amenity"=>"1"}
+      DeepMerge::deep_merge!(hash_params, hash_session, {:preserve_knockout => preserve_ko, :knockout_prefix => FIELD_KNOCKOUT_PREFIX})
+      assert_equal({"amenity"=>""}, hash_session)
 
-    # Example: src = {'key' => "--1"}, dst = {'key' => "2"} -> merges to {'key' => ""}
-    hash_params = {"amenity"=>"--1"}
-    hash_session = {"amenity"=>"2"}
-    DeepMerge::deep_merge!(hash_params, hash_session, {:knockout_prefix => FIELD_KNOCKOUT_PREFIX})
-    assert_equal({"amenity"=>""}, hash_session)
+      # Example: src = {'key' => "--1"}, dst = {'key' => "2"} -> merges to {'key' => ""}
+      hash_params = {"amenity"=>"--1"}
+      hash_session = {"amenity"=>"2"}
+      DeepMerge::deep_merge!(hash_params, hash_session, {:preserve_knockout => preserve_ko, :knockout_prefix => FIELD_KNOCKOUT_PREFIX})
+      assert_equal({"amenity"=>""}, hash_session)
 
-    # Example: src = {'key' => "--1"}, dst = {'key' => "1"} -> merges to {'key' => ""}
-    hash_params = {"amenity"=>["--1"]}
-    hash_session = {"amenity"=>"1"}
-    DeepMerge::deep_merge!(hash_params, hash_session, {:knockout_prefix => FIELD_KNOCKOUT_PREFIX})
-    assert_equal({"amenity"=>[]}, hash_session)
+      # Example: src = {'key' => "--1"}, dst = {'key' => "1"} -> merges to {'key' => ""}
+      hash_params = {"amenity"=>["--1"]}
+      hash_session = {"amenity"=>"1"}
+      DeepMerge::deep_merge!(hash_params, hash_session, {:preserve_knockout => preserve_ko, :knockout_prefix => FIELD_KNOCKOUT_PREFIX})
+      assert_equal({"amenity"=>[]}, hash_session)
 
-    # Example: src = {'key' => "--1"}, dst = {'key' => "1"} -> merges to {'key' => ""}
-    hash_params = {"amenity"=>["--1"]}
-    hash_session = {"amenity"=>["1"]}
-    DeepMerge::deep_merge!(hash_params, hash_session, {:knockout_prefix => FIELD_KNOCKOUT_PREFIX})
-    assert_equal({"amenity"=>[]}, hash_session)
+      # Example: src = {'key' => "--1"}, dst = {'key' => "1"} -> merges to {'key' => ""}
+      hash_params = {"amenity"=>["--1"]}
+      hash_session = {"amenity"=>["1"]}
+      DeepMerge::deep_merge!(hash_params, hash_session, {:preserve_knockout => preserve_ko, :knockout_prefix => FIELD_KNOCKOUT_PREFIX})
+      assert_equal({"amenity"=>[]}, hash_session)
 
-    # Example: src = {'key' => "--1"}, dst = {'key' => "1"} -> merges to {'key' => ""}
-    hash_params = {"amenity"=>"--1"}
-    hash_session = {}
-    DeepMerge::deep_merge!(hash_params, hash_session, {:knockout_prefix => FIELD_KNOCKOUT_PREFIX})
-    assert_equal({"amenity"=>""}, hash_session)
+      # Example: src = {'key' => "--1"}, dst = {'key' => "1"} -> merges to {'key' => ""}
+      hash_params = {"amenity"=>"--1"}
+      hash_session = {}
+      DeepMerge::deep_merge!(hash_params, hash_session, {:preserve_knockout => preserve_ko, :knockout_prefix => FIELD_KNOCKOUT_PREFIX})
+      assert_equal({"amenity"=>""}, hash_session)
 
 
-    # Example: src = {'key' => "--1"}, dst = {'key' => "1"} -> merges to {'key' => ""}
-    hash_params = {"amenity"=>"--1"}
-    hash_session = {"amenity"=>["1"]}
-    DeepMerge::deep_merge!(hash_params, hash_session, {:knockout_prefix => FIELD_KNOCKOUT_PREFIX})
-    assert_equal({"amenity"=>""}, hash_session)
+      # Example: src = {'key' => "--1"}, dst = {'key' => "1"} -> merges to {'key' => ""}
+      hash_params = {"amenity"=>"--1"}
+      hash_session = {"amenity"=>["1"]}
+      DeepMerge::deep_merge!(hash_params, hash_session, {:preserve_knockout => preserve_ko, :knockout_prefix => FIELD_KNOCKOUT_PREFIX})
+      assert_equal({"amenity"=>""}, hash_session)
 
-    #are unmerged hashes passed unmodified w/out :unpack_arrays?
-    hash_params = {"amenity"=>{"id"=>["26,27"]}}
-    hash_session = {}
-    DeepMerge::deep_merge!(hash_params, hash_session, {:knockout_prefix => FIELD_KNOCKOUT_PREFIX})
-    assert_equal({"amenity"=>{"id"=>["26,27"]}}, hash_session)
+      #are unmerged hashes passed unmodified w/out :unpack_arrays?
+      hash_params = {"amenity"=>{"id"=>["26,27"]}}
+      hash_session = {}
+      DeepMerge::deep_merge!(hash_params, hash_session, {:preserve_knockout => preserve_ko, :knockout_prefix => FIELD_KNOCKOUT_PREFIX})
+      assert_equal({"amenity"=>{"id"=>["26,27"]}}, hash_session)
 
-    #hash should be merged
-    hash_params = {"amenity"=>{"id"=>["26,27"]}}
-    hash_session = {}
-    DeepMerge::deep_merge!(hash_params, hash_session, {:knockout_prefix => FIELD_KNOCKOUT_PREFIX, :unpack_arrays => ","})
-    assert_equal({"amenity"=>{"id"=>["26","27"]}}, hash_session)
+      #hash should be merged
+      hash_params = {"amenity"=>{"id"=>["26,27"]}}
+      hash_session = {}
+      DeepMerge::deep_merge!(hash_params, hash_session, {:preserve_knockout => preserve_ko, :knockout_prefix => FIELD_KNOCKOUT_PREFIX, :unpack_arrays => ","})
+      assert_equal({"amenity"=>{"id"=>["26","27"]}}, hash_session)
 
-    # second merge of same values should result in no change in output
-    hash_params = {"amenity"=>{"id"=>["26,27"]}}
-    DeepMerge::deep_merge!(hash_params, hash_session, {:knockout_prefix => FIELD_KNOCKOUT_PREFIX, :unpack_arrays => ","})
-    assert_equal({"amenity"=>{"id"=>["26","27"]}}, hash_session)
+      # second merge of same values should result in no change in output
+      hash_params = {"amenity"=>{"id"=>["26,27"]}}
+      DeepMerge::deep_merge!(hash_params, hash_session, {:preserve_knockout => preserve_ko, :knockout_prefix => FIELD_KNOCKOUT_PREFIX, :unpack_arrays => ","})
+      assert_equal({"amenity"=>{"id"=>["26","27"]}}, hash_session)
 
-    #hashes with knockout values are suppressed
-    hash_params = {"amenity"=>{"id"=>["#{FIELD_KNOCKOUT_PREFIX}26,#{FIELD_KNOCKOUT_PREFIX}27,28"]}}
-    hash_session = {}
-    DeepMerge::deep_merge!(hash_params, hash_session, {:knockout_prefix => FIELD_KNOCKOUT_PREFIX, :unpack_arrays => ","})
-    assert_equal({"amenity"=>{"id"=>["28"]}}, hash_session)
+      #hashes with knockout values are suppressed
+      hash_params = {"amenity"=>{"id"=>["#{FIELD_KNOCKOUT_PREFIX}26,#{FIELD_KNOCKOUT_PREFIX}27,28"]}}
+      hash_session = {}
+      DeepMerge::deep_merge!(hash_params, hash_session, {:preserve_knockout => preserve_ko, :knockout_prefix => FIELD_KNOCKOUT_PREFIX, :unpack_arrays => ","})
+      if preserve_ko
+        assert_equal({"amenity"=>{"id"=>["28","#{FIELD_KNOCKOUT_PREFIX}26","#{FIELD_KNOCKOUT_PREFIX}27"]}}, hash_session)
+      else
+        assert_equal({"amenity"=>{"id"=>["28"]}}, hash_session)
+      end
 
-    hash_src= {'region' =>{'ids'=>['--']}, 'query_uuid' => 'zzz'}
-    hash_dst= {'region' =>{'ids'=>['227','2','3','3']}, 'query_uuid' => 'zzz'}
-    DeepMerge::deep_merge!(hash_src, hash_dst, {:knockout_prefix => '--', :unpack_arrays => ","})
-    assert_equal({'region' =>{'ids'=>[]}, 'query_uuid' => 'zzz'}, hash_dst)
+      hash_src= {'region' =>{'ids'=>['--']}, 'query_uuid' => 'zzz'}
+      hash_dst= {'region' =>{'ids'=>['227','2','3','3']}, 'query_uuid' => 'zzz'}
+      DeepMerge::deep_merge!(hash_src, hash_dst, {:preserve_knockout => preserve_ko, :knockout_prefix => '--', :unpack_arrays => ","})
+      assert_equal({'region' =>{'ids'=>[]}, 'query_uuid' => 'zzz'}, hash_dst)
 
-    hash_src= {'region' =>{'ids'=>['--']}, 'query_uuid' => 'zzz'}
-    hash_dst= {'region' =>{'ids'=>['227','2','3','3'], 'id' => '3'}, 'query_uuid' => 'zzz'}
-    DeepMerge::deep_merge!(hash_src, hash_dst, {:knockout_prefix => '--', :unpack_arrays => ","})
-    assert_equal({'region' =>{'ids'=>[], 'id'=>'3'}, 'query_uuid' => 'zzz'}, hash_dst)
+      hash_src= {'region' =>{'ids'=>['--']}, 'query_uuid' => 'zzz'}
+      hash_dst= {'region' =>{'ids'=>['227','2','3','3'], 'id' => '3'}, 'query_uuid' => 'zzz'}
+      DeepMerge::deep_merge!(hash_src, hash_dst, {:preserve_knockout => preserve_ko, :knockout_prefix => '--', :unpack_arrays => ","})
+      assert_equal({'region' =>{'ids'=>[], 'id'=>'3'}, 'query_uuid' => 'zzz'}, hash_dst)
 
-    hash_src= {'region' =>{'ids'=>['--']}, 'query_uuid' => 'zzz'}
-    hash_dst= {'region' =>{'muni_city_id' => '2244', 'ids'=>['227','2','3','3'], 'id'=>'3'}, 'query_uuid' => 'zzz'}
-    DeepMerge::deep_merge!(hash_src, hash_dst, {:knockout_prefix => '--', :unpack_arrays => ","})
-    assert_equal({'region' =>{'muni_city_id' => '2244', 'ids'=>[], 'id'=>'3'}, 'query_uuid' => 'zzz'}, hash_dst)
+      hash_src= {'region' =>{'ids'=>['--']}, 'query_uuid' => 'zzz'}
+      hash_dst= {'region' =>{'muni_city_id' => '2244', 'ids'=>['227','2','3','3'], 'id'=>'3'}, 'query_uuid' => 'zzz'}
+      DeepMerge::deep_merge!(hash_src, hash_dst, {:preserve_knockout => preserve_ko, :knockout_prefix => '--', :unpack_arrays => ","})
+      assert_equal({'region' =>{'muni_city_id' => '2244', 'ids'=>[], 'id'=>'3'}, 'query_uuid' => 'zzz'}, hash_dst)
 
-    hash_src= {'region' =>{'ids'=>['--'], 'id' => '5'}, 'query_uuid' => 'zzz'}
-    hash_dst= {'region' =>{'muni_city_id' => '2244', 'ids'=>['227','2','3','3'], 'id'=>'3'}, 'query_uuid' => 'zzz'}
-    DeepMerge::deep_merge!(hash_src, hash_dst, {:knockout_prefix => '--', :unpack_arrays => ","})
-    assert_equal({'region' =>{'muni_city_id' => '2244', 'ids'=>[], 'id'=>'5'}, 'query_uuid' => 'zzz'}, hash_dst)
+      hash_src= {'region' =>{'ids'=>['--'], 'id' => '5'}, 'query_uuid' => 'zzz'}
+      hash_dst= {'region' =>{'muni_city_id' => '2244', 'ids'=>['227','2','3','3'], 'id'=>'3'}, 'query_uuid' => 'zzz'}
+      DeepMerge::deep_merge!(hash_src, hash_dst, {:preserve_knockout => preserve_ko, :knockout_prefix => '--', :unpack_arrays => ","})
+      assert_equal({'region' =>{'muni_city_id' => '2244', 'ids'=>[], 'id'=>'5'}, 'query_uuid' => 'zzz'}, hash_dst)
 
-    hash_src= {'region' =>{'ids'=>['--', '227'], 'id' => '5'}, 'query_uuid' => 'zzz'}
-    hash_dst= {'region' =>{'muni_city_id' => '2244', 'ids'=>['227','2','3','3'], 'id'=>'3'}, 'query_uuid' => 'zzz'}
-    DeepMerge::deep_merge!(hash_src, hash_dst, {:knockout_prefix => '--', :unpack_arrays => ","})
-    assert_equal({'region' =>{'muni_city_id' => '2244', 'ids'=>['227'], 'id'=>'5'}, 'query_uuid' => 'zzz'}, hash_dst)
+      hash_src= {'region' =>{'ids'=>['--', '227'], 'id' => '5'}, 'query_uuid' => 'zzz'}
+      hash_dst= {'region' =>{'muni_city_id' => '2244', 'ids'=>['227','2','3','3'], 'id'=>'3'}, 'query_uuid' => 'zzz'}
+      DeepMerge::deep_merge!(hash_src, hash_dst, {:preserve_knockout => preserve_ko, :knockout_prefix => '--', :unpack_arrays => ","})
+      assert_equal({'region' =>{'muni_city_id' => '2244', 'ids'=>['227'], 'id'=>'5'}, 'query_uuid' => 'zzz'}, hash_dst)
 
-    hash_src= {'region' =>{'muni_city_id' => '--', 'ids'=>'--', 'id'=>'5'}, 'query_uuid' => 'zzz'}
-    hash_dst= {'region' =>{'muni_city_id' => '2244', 'ids'=>['227','2','3','3'], 'id'=>'3'}, 'query_uuid' => 'zzz'}
-    DeepMerge::deep_merge!(hash_src, hash_dst, {:knockout_prefix => '--', :unpack_arrays => ","})
-    assert_equal({'region' =>{'muni_city_id' => '', 'ids'=>'', 'id'=>'5'}, 'query_uuid' => 'zzz'}, hash_dst)
+      hash_src= {'region' =>{'muni_city_id' => '--', 'ids'=>'--', 'id'=>'5'}, 'query_uuid' => 'zzz'}
+      hash_dst= {'region' =>{'muni_city_id' => '2244', 'ids'=>['227','2','3','3'], 'id'=>'3'}, 'query_uuid' => 'zzz'}
+      DeepMerge::deep_merge!(hash_src, hash_dst, {:preserve_knockout => preserve_ko, :knockout_prefix => '--', :unpack_arrays => ","})
+      assert_equal({'region' =>{'muni_city_id' => '', 'ids'=>'', 'id'=>'5'}, 'query_uuid' => 'zzz'}, hash_dst)
 
-    hash_src= {'region' =>{'muni_city_id' => '--', 'ids'=>['--'], 'id'=>'5'}, 'query_uuid' => 'zzz'}
-    hash_dst= {'region' =>{'muni_city_id' => '2244', 'ids'=>['227','2','3','3'], 'id'=>'3'}, 'query_uuid' => 'zzz'}
-    DeepMerge::deep_merge!(hash_src, hash_dst, {:knockout_prefix => '--', :unpack_arrays => ","})
-    assert_equal({'region' =>{'muni_city_id' => '', 'ids'=>[], 'id'=>'5'}, 'query_uuid' => 'zzz'}, hash_dst)
+      hash_src= {'region' =>{'muni_city_id' => '--', 'ids'=>['--'], 'id'=>'5'}, 'query_uuid' => 'zzz'}
+      hash_dst= {'region' =>{'muni_city_id' => '2244', 'ids'=>['227','2','3','3'], 'id'=>'3'}, 'query_uuid' => 'zzz'}
+      DeepMerge::deep_merge!(hash_src, hash_dst, {:preserve_knockout => preserve_ko, :knockout_prefix => '--', :unpack_arrays => ","})
+      assert_equal({'region' =>{'muni_city_id' => '', 'ids'=>[], 'id'=>'5'}, 'query_uuid' => 'zzz'}, hash_dst)
 
-    hash_src= {'region' =>{'muni_city_id' => '--', 'ids'=>['--','227'], 'id'=>'5'}, 'query_uuid' => 'zzz'}
-    hash_dst= {'region' =>{'muni_city_id' => '2244', 'ids'=>['227','2','3','3'], 'id'=>'3'}, 'query_uuid' => 'zzz'}
-    DeepMerge::deep_merge!(hash_src, hash_dst, {:knockout_prefix => '--', :unpack_arrays => ","})
-    assert_equal({'region' =>{'muni_city_id' => '', 'ids'=>['227'], 'id'=>'5'}, 'query_uuid' => 'zzz'}, hash_dst)
+      hash_src= {'region' =>{'muni_city_id' => '--', 'ids'=>['--','227'], 'id'=>'5'}, 'query_uuid' => 'zzz'}
+      hash_dst= {'region' =>{'muni_city_id' => '2244', 'ids'=>['227','2','3','3'], 'id'=>'3'}, 'query_uuid' => 'zzz'}
+      DeepMerge::deep_merge!(hash_src, hash_dst, {:preserve_knockout => preserve_ko, :knockout_prefix => '--', :unpack_arrays => ","})
+      assert_equal({'region' =>{'muni_city_id' => '', 'ids'=>['227'], 'id'=>'5'}, 'query_uuid' => 'zzz'}, hash_dst)
 
-    hash_src = {"muni_city_id"=>"--", "id"=>""}
-    hash_dst = {"muni_city_id"=>"", "id"=>""}
-    DeepMerge::deep_merge!(hash_src, hash_dst, {:knockout_prefix => '--', :unpack_arrays => ","})
-    assert_equal({"muni_city_id"=>"", "id"=>""}, hash_dst)
+      hash_src = {"muni_city_id"=>"--", "id"=>""}
+      hash_dst = {"muni_city_id"=>"", "id"=>""}
+      DeepMerge::deep_merge!(hash_src, hash_dst, {:preserve_knockout => preserve_ko, :knockout_prefix => '--', :unpack_arrays => ","})
+      assert_equal({"muni_city_id"=>"", "id"=>""}, hash_dst)
 
-    hash_src = {"region"=>{"muni_city_id"=>"--", "id"=>""}}
-    hash_dst = {"region"=>{"muni_city_id"=>"", "id"=>""}}
-    DeepMerge::deep_merge!(hash_src, hash_dst, {:knockout_prefix => '--', :unpack_arrays => ","})
-    assert_equal({"region"=>{"muni_city_id"=>"", "id"=>""}}, hash_dst)
+      hash_src = {"region"=>{"muni_city_id"=>"--", "id"=>""}}
+      hash_dst = {"region"=>{"muni_city_id"=>"", "id"=>""}}
+      DeepMerge::deep_merge!(hash_src, hash_dst, {:preserve_knockout => preserve_ko, :knockout_prefix => '--', :unpack_arrays => ","})
+      assert_equal({"region"=>{"muni_city_id"=>"", "id"=>""}}, hash_dst)
 
-    hash_src = {"query_uuid"=>"a0dc3c84-ec7f-6756-bdb0-fff9157438ab", "url_regions"=>[], "region"=>{"muni_city_id"=>"--", "id"=>""}, "property"=>{"property_type_id"=>"", "search_rate_min"=>"", "search_rate_max"=>""}, "task"=>"search", "run_query"=>"Search"}
-    hash_dst = {"query_uuid"=>"a0dc3c84-ec7f-6756-bdb0-fff9157438ab", "url_regions"=>[], "region"=>{"muni_city_id"=>"", "id"=>""}, "property"=>{"property_type_id"=>"", "search_rate_min"=>"", "search_rate_max"=>""}, "task"=>"search", "run_query"=>"Search"}
-    DeepMerge::deep_merge!(hash_src, hash_dst, {:knockout_prefix => '--', :unpack_arrays => ","})
-    assert_equal({"query_uuid"=>"a0dc3c84-ec7f-6756-bdb0-fff9157438ab", "url_regions"=>[], "region"=>{"muni_city_id"=>"", "id"=>""}, "property"=>{"property_type_id"=>"", "search_rate_min"=>"", "search_rate_max"=>""}, "task"=>"search", "run_query"=>"Search"}, hash_dst)
+      hash_src = {"query_uuid"=>"a0dc3c84-ec7f-6756-bdb0-fff9157438ab", "url_regions"=>[], "region"=>{"muni_city_id"=>"--", "id"=>""}, "property"=>{"property_type_id"=>"", "search_rate_min"=>"", "search_rate_max"=>""}, "task"=>"search", "run_query"=>"Search"}
+      hash_dst = {"query_uuid"=>"a0dc3c84-ec7f-6756-bdb0-fff9157438ab", "url_regions"=>[], "region"=>{"muni_city_id"=>"", "id"=>""}, "property"=>{"property_type_id"=>"", "search_rate_min"=>"", "search_rate_max"=>""}, "task"=>"search", "run_query"=>"Search"}
+      DeepMerge::deep_merge!(hash_src, hash_dst, {:preserve_knockout => preserve_ko, :knockout_prefix => '--', :unpack_arrays => ","})
+      assert_equal({"query_uuid"=>"a0dc3c84-ec7f-6756-bdb0-fff9157438ab", "url_regions"=>[], "region"=>{"muni_city_id"=>"", "id"=>""}, "property"=>{"property_type_id"=>"", "search_rate_min"=>"", "search_rate_max"=>""}, "task"=>"search", "run_query"=>"Search"}, hash_dst)
 
-    # hash of array of hashes
-    hash_src = {"item" => [{"1" => "3"}, {"2" => "4"}]}
-    hash_dst = {"item" => [{"3" => "5"}]}
-    DeepMerge::deep_merge!(hash_src, hash_dst)
-    assert_equal({"item" => [{"3" => "5"}, {"1" => "3"}, {"2" => "4"}]}, hash_dst)
+      # hash of array of hashes
+      hash_src = {"item" => [{"1" => "3"}, {"2" => "4"}]}
+      hash_dst = {"item" => [{"3" => "5"}]}
+      DeepMerge::deep_merge!(hash_src, hash_dst, {:preserve_knockout => preserve_ko})
+      assert_equal({"item" => [{"3" => "5"}, {"1" => "3"}, {"2" => "4"}]}, hash_dst)
 
-    ######################################
-    # tests for "merge_hash_arrays" option
+      ######################################
+      # tests for "merge_hash_arrays" option
 
-    hash_src = {"item" => [{"1" => "3"}]}
-    hash_dst = {"item" => [{"3" => "5"}]}
-    DeepMerge::deep_merge!(hash_src, hash_dst, {:merge_hash_arrays => true})
-    assert_equal({"item" => [{"3" => "5", "1" => "3"}]}, hash_dst)
+      hash_src = {"item" => [{"1" => "3"}]}
+      hash_dst = {"item" => [{"3" => "5"}]}
+      DeepMerge::deep_merge!(hash_src, hash_dst, {:preserve_knockout => preserve_ko, :merge_hash_arrays => true})
+      assert_equal({"item" => [{"3" => "5", "1" => "3"}]}, hash_dst)
 
-    hash_src = {"item" => [{"1" => "3"}, {"2" => "4"}]}
-    hash_dst = {"item" => [{"3" => "5"}]}
-    DeepMerge::deep_merge!(hash_src, hash_dst, {:merge_hash_arrays => true})
-    assert_equal({"item" => [{"3" => "5", "1" => "3"}, {"2" => "4"}]}, hash_dst)
+      hash_src = {"item" => [{"1" => "3"}, {"2" => "4"}]}
+      hash_dst = {"item" => [{"3" => "5"}]}
+      DeepMerge::deep_merge!(hash_src, hash_dst, {:preserve_knockout => preserve_ko, :merge_hash_arrays => true})
+      assert_equal({"item" => [{"3" => "5", "1" => "3"}, {"2" => "4"}]}, hash_dst)
 
-    hash_src = {"item" => [{"1" => "3"}]}
-    hash_dst = {"item" => [{"3" => "5"}, {"2" => "4"}]}
-    DeepMerge::deep_merge!(hash_src, hash_dst, {:merge_hash_arrays => true})
-    assert_equal({"item" => [{"3" => "5", "1" => "3"}, {"2" => "4"}]}, hash_dst)
+      hash_src = {"item" => [{"1" => "3"}]}
+      hash_dst = {"item" => [{"3" => "5"}, {"2" => "4"}]}
+      DeepMerge::deep_merge!(hash_src, hash_dst, {:preserve_knockout => preserve_ko, :merge_hash_arrays => true})
+      assert_equal({"item" => [{"3" => "5", "1" => "3"}, {"2" => "4"}]}, hash_dst)
 
-    # if arrays contain non-hash objects, the :merge_hash_arrays option has
-    # no effect.
-    hash_src = {"item" => [{"1" => "3"}, "str"]}  # contains "str", non-hash
-    hash_dst = {"item" => [{"3" => "5"}]}
-    DeepMerge::deep_merge!(hash_src, hash_dst, {:merge_hash_arrays => true})
-    assert_equal({"item" => [{"3" => "5"}, {"1" => "3"}, "str"]}, hash_dst)
+      # if arrays contain non-hash objects, the :merge_hash_arrays option has
+      # no effect.
+      hash_src = {"item" => [{"1" => "3"}, "str"]}  # contains "str", non-hash
+      hash_dst = {"item" => [{"3" => "5"}]}
+      DeepMerge::deep_merge!(hash_src, hash_dst, {:preserve_knockout => preserve_ko, :merge_hash_arrays => true})
+      assert_equal({"item" => [{"3" => "5"}, {"1" => "3"}, "str"]}, hash_dst)
 
-    # Merging empty strings
-    s1, s2 = "hello", ""
-    [s1, s2].each { |s| s.extend StringBlank }
-    hash_dst = {"item" => s1 }
-    hash_src = {"item" => s2 }
-    DeepMerge::deep_merge!(hash_src, hash_dst)
-    assert_equal({"item" => ""}, hash_dst)
+      # Merging empty strings
+      s1, s2 = "hello", ""
+      [s1, s2].each { |s| s.extend StringBlank }
+      hash_dst = {"item" => s1 }
+      hash_src = {"item" => s2 }
+      DeepMerge::deep_merge!(hash_src, hash_dst, {:preserve_knockout => preserve_ko})
+      assert_equal({"item" => ""}, hash_dst)
+    end
   end # test_deep_merge
 end
