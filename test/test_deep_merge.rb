@@ -604,5 +604,20 @@ class TestDeepMerge < Test::Unit::TestCase
     hash_src = {"item" => s2 }
     DeepMerge::deep_merge!(hash_src, hash_dst)
     assert_equal({"item" => ""}, hash_dst)
+
+    ################################
+    # Test ignoring nil destination
+
+    # if the destination is nil, skip merging it
+    hash_src = {"foo" => {"bar" => 1} }
+    hash_dst = {"foo" => {"bar" => nil} }
+    DeepMerge::deep_merge!(hash_src, hash_dst)
+    assert_equal({"foo" => {"bar" => nil}}, hash_dst)
+
+    # if the destination does not exists, merge it
+    hash_src = {"foo" => {"bar" => 1} }
+    hash_dst = {"foo" => {} }
+    DeepMerge::deep_merge!(hash_src, hash_dst)
+    assert_equal({"foo" => {"bar" => 1}}, hash_dst)
   end # test_deep_merge
 end
