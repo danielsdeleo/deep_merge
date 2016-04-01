@@ -87,6 +87,12 @@ class TestDeepMerge < Test::Unit::TestCase
     DeepMerge::deep_merge!(hash_src, hash_dst)
     assert_equal(["2","4","1","3"], hash_dst['property'])
 
+    # hashes holding array (overwrite)
+    hash_src = {"property" => ["1","3"]}
+    hash_dst = {"property" => ["2","4"]}
+    DeepMerge::deep_merge!(hash_src, hash_dst, {:overwrite_arrays => true})
+    assert_equal(["1","3"], hash_dst['property'])
+
     # hashes holding array (sorted)
     hash_src = {"property" => ["1","3"]}
     hash_dst = {"property" => ["2","4"]}
