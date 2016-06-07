@@ -29,6 +29,8 @@ Options are specified in the last parameter passed, which should be in hash form
       Set to true to skip any unmergeable elements from source
     :knockout_prefix        DEFAULT: nil
       Set to string value to signify prefix which deletes elements from existing element
+    :overwrite_arrays       DEFAULT: false
+      Set to true if you want to avoid merging arrays
     :sort_merged_arrays     DEFAULT: false
       Set to true to sort all arrays that are merged together
     :unpack_arrays          DEFAULT: nil
@@ -56,6 +58,15 @@ Additionally, if the knockout_prefix is passed alone as a string, it will cause 
     dest   = {:x => [1,2,3]}
     dest.ko_deep_merge!(source)
     Results: {:x => ""}
+
+**:overwrite_arrays**
+
+The purpose of this is to provide a way to replace Arrays instead of having them merge together.
+
+    source = {:x => ['1', '2']}
+    dest   = {:x => ['3', '4']}
+    dest.deep_merge!(source, {:overwrite_arrays => true})
+    Results: {:x => ['1', '2']}
 
 **:unpack_arrays**
 
