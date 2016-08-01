@@ -1,4 +1,9 @@
 2016-08-01 Jason Frey <fryguy9@gmail.com>
+  * Ship version 1.1.1
+
+  * Fixed release date in the gemspec.
+
+2016-08-01 Jason Frey <fryguy9@gmail.com>
   * Ship version 1.1.0
 
   * Add testing for newer Ruby 2.2, 2.3, head, and jruby-head.
