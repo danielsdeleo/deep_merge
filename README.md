@@ -132,4 +132,4 @@ Availablility
 
 `deep_merge` was written by Steve Midgley, and is now maintained by Daniel DeLeo. The official home of `deep_merge` on the internet is now https://github.com/danielsdeleo/deep_merge
 
-Copyright (c) 2008 Steve Midgley, released under the MIT license
+Copyright (c) 2008-2016 Steve Midgley, released under the MIT license
