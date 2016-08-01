@@ -5,7 +5,7 @@ Gem::Specification.new do |s|
   s.version = "1.1.0"
 
   s.authors = ["Steve Midgley"]
-  s.date = %q{2011-07-28}
+  s.date = %q{2016-08-01}
   s.description = %q{Recursively merge hashes.}
   s.email = %q{dan@kallistec.com}
   s.license = 'MIT'
