@@ -2,7 +2,7 @@
 
 Gem::Specification.new do |s|
   s.name = %q{deep_merge}
-  s.version = "1.0.1"
+  s.version = "1.1.0"
 
   s.authors = ["Steve Midgley"]
   s.date = %q{2011-07-28}
