@@ -34,6 +34,8 @@ module DeepMerge
   #      Set to string value to run "Array::join" then "String::split" against all arrays
   #   :merge_hash_arrays      DEFAULT: false
   #      Set to true to merge hashes within arrays
+  #   :keep_array_duplicates  DEFAULT: false
+  #      Set to true to preserve duplicate array entries
   #   :merge_debug            DEFAULT: false
   #      Set to true to get console output of merge process for debugging
   #

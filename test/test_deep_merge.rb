@@ -622,5 +622,15 @@ class TestDeepMerge < Test::Unit::TestCase
     hash_src = {"item" => s2 }
     DeepMerge::deep_merge!(hash_src, hash_dst)
     assert_equal({"item" => ""}, hash_dst)
+
+    ######################################
+    # tests for "keep_array_duplicates" option
+    hash_src = {"item" => ["2", "3"]}
+    hash_dst = {"item" => ["1", "2"]}
+    DeepMerge::deep_merge!(hash_src, hash_dst, {:keep_array_duplicates => true})
+    assert_equal({"item" => ["1", "2", "2", "3"]}, hash_dst)
+
+
+
   end # test_deep_merge
 end
