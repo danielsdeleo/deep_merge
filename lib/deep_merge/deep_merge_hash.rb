@@ -10,14 +10,16 @@ module DeepMerge
 
     # deep_merge! will merge and overwrite any unmergeables in destination hash
     def deep_merge!(source, options = {})
-      default_opts = {:preserve_unmergeables => false}
+      default_opts = {:preserve_unmergeables => true}
       DeepMerge::deep_merge!(source, self, default_opts.merge(options))
     end
 
     # deep_merge will merge and skip any unmergeables in destination hash
     def deep_merge(source, options = {})
       default_opts = {:preserve_unmergeables => true}
-      DeepMerge::deep_merge!(source, self, default_opts.merge(options))
+      copy = {}
+      DeepMerge::deep_merge!(self, copy, default_opts.merge(options))
+      DeepMerge::deep_merge!(source, copy, default_opts.merge(options))
     end
 
   end # DeepMergeHashExt
