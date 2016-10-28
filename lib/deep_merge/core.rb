@@ -99,7 +99,7 @@ module DeepMerge
     # do nothing if source is nil
     return dest if source.nil?
     # if dest doesn't exist, then simply copy source to it
-    if !(dest) && overwrite_unmergeable
+    if dest.nil? && overwrite_unmergeable
       dest = source; return dest
     end
 
@@ -109,7 +109,7 @@ module DeepMerge
       source.each do |src_key, src_value|
         if dest.kind_of?(Hash)
           puts "#{di} looping: #{src_key.inspect} => #{src_value.inspect} :: #{dest.inspect}" if merge_debug
-          if dest[src_key]
+          unless dest[src_key].nil?
             puts "#{di} ==>merging: #{src_key.inspect} => #{src_value.inspect} :: #{dest[src_key].inspect}" if merge_debug
             dest[src_key] = deep_merge!(src_value, dest[src_key], options.merge(:debug_indent => di + '  '))
           else # dest[src_key] doesn't exist so we want to create and overwrite it (but we do this via deep_merge!)
