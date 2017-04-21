@@ -99,6 +99,15 @@ Push src elements to existing arrays, instead of overwriting them.
     dest.deep_merge!(source, {:extend_existing_arrays => true})
     Results: {"property" => ["1", "2", "3", "4"]}
 
+**:merge_nil_values**
+
+The purpose of this option is to allow nil hash values to be merged.  The prior behavior was to discard nil hash values and remains the default if not specified.
+
+    source = {"item" => nil}
+    dest   = {"item" => "existing"}
+    dest.deep_merge!(source, {:merge_nil_values => true})
+    Results: {"item" => nil}
+
 There are many tests for this library - and you can learn more about the features and usages of deep_merge! by just browsing the test examples.
 
 Using deep_merge in Rails

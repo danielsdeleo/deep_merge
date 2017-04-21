@@ -630,7 +630,16 @@ class TestDeepMerge < Test::Unit::TestCase
     DeepMerge::deep_merge!(hash_src, hash_dst, {:keep_array_duplicates => true})
     assert_equal({"item" => ["1", "2", "2", "3"]}, hash_dst)
 
+    # Don't merge nil values by default
+    hash_src = {"item" => nil}
+    hash_dst = {"item" => "existing"}
+    DeepMerge::deep_merge!(hash_src, hash_dst)
+    assert_equal({"item" => "existing"}, hash_dst)
 
-
+    # Merge nil values via an explicit: :merge_nil_values => true
+    hash_src = {"item" => nil}
+    hash_dst = {"item" => "existing"}
+    DeepMerge::deep_merge!(hash_src, hash_dst, {:merge_nil_values => true})
+    assert_equal({"item" => nil}, hash_dst)
   end # test_deep_merge
 end
