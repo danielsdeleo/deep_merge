@@ -94,10 +94,12 @@ module DeepMerge
     extend_existing_arrays = options[:extend_existing_arrays] || false
     # request that arrays keep duplicate elements
     keep_array_duplicates = options[:keep_array_duplicates] || false
+    # request that nil values are merged or skipped (Skipped/false by default)
+    merge_nil_values = options[:merge_nil_values] || false
 
     di = options[:debug_indent] || ''
     # do nothing if source is nil
-    return dest if source.nil?
+    return dest if !merge_nil_values && source.nil?
     # if dest doesn't exist, then simply copy source to it
     if !(dest) && overwrite_unmergeable
       dest = source; return dest
