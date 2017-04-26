@@ -1,4 +1,4 @@
-require 'test/unit'
+require 'minitest/autorun'
 
 $:.unshift(File.dirname(__FILE__) + '/../lib/')
 require 'deep_merge'
@@ -11,7 +11,7 @@ module StringBlank
   end
 end
 
-class TestDeepMerge < Test::Unit::TestCase
+class TestDeepMerge < Minitest::Test
 
   def setup
   end
@@ -232,12 +232,13 @@ class TestDeepMerge < Test::Unit::TestCase
     assert_equal({"property"=>[{:number=>"1"}, {:number=>"2"}, {:number=>"3"}]}, hash_dst)
 
     # test parameter management for knockout_prefix and overwrite unmergable
-    assert_raise(DeepMerge::InvalidParameter) {DeepMerge::deep_merge!(hash_src, hash_dst, {:knockout_prefix => ""})}
-    assert_raise(DeepMerge::InvalidParameter) {DeepMerge::deep_merge!(hash_src, hash_dst, {:preserve_unmergeables => true, :knockout_prefix => ""})}
-    assert_raise(DeepMerge::InvalidParameter) {DeepMerge::deep_merge!(hash_src, hash_dst, {:preserve_unmergeables => true, :knockout_prefix => "--"})}
-    assert_nothing_raised(DeepMerge::InvalidParameter) {DeepMerge::deep_merge!(hash_src, hash_dst, {:knockout_prefix => "--"})}
-    assert_nothing_raised(DeepMerge::InvalidParameter) {DeepMerge::deep_merge!(hash_src, hash_dst)}
-    assert_nothing_raised(DeepMerge::InvalidParameter) {DeepMerge::deep_merge!(hash_src, hash_dst, {:preserve_unmergeables => true})}
+    assert_raises(DeepMerge::InvalidParameter) {DeepMerge::deep_merge!(hash_src, hash_dst, {:knockout_prefix => ""})}
+    assert_raises(DeepMerge::InvalidParameter) {DeepMerge::deep_merge!(hash_src, hash_dst, {:preserve_unmergeables => true, :knockout_prefix => ""})}
+    assert_raises(DeepMerge::InvalidParameter) {DeepMerge::deep_merge!(hash_src, hash_dst, {:preserve_unmergeables => true, :knockout_prefix => "--"})}
+    # test valid parameters
+    DeepMerge::deep_merge!(hash_src, hash_dst, {:knockout_prefix => "--"})
+    DeepMerge::deep_merge!(hash_src, hash_dst)
+    DeepMerge::deep_merge!(hash_src, hash_dst, {:preserve_unmergeables => true})
 
     # hash holding arrays of arrays
     hash_src = {["1", "2", "3"] => ["1", "2"]}
