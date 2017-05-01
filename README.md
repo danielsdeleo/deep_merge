@@ -39,6 +39,8 @@ Options are specified in the last parameter passed, which should be in hash form
       Set to true to merge hashes within arrays
     :extend_existing_arrays DEFAULT: false
       Set to true to extend existing arrays, instead of overwriting them
+    :merge_nil_values       DEFAULT: false
+      Set to true to merge nil hash values, overwriting a possibly non-nil value
     :merge_debug            DEFAULT: false
       Set to true to get console output of merge process for debugging
 
