@@ -371,7 +371,7 @@ class TestDeepMerge < Test::Unit::TestCase
     hash_params = {'amenity' => "--"}
     hash_session = {"amenity" => "1"}
     DeepMerge::deep_merge!(hash_params, hash_session, {:knockout_prefix => "--", :unpack_arrays => ","})
-    assert_equal({'amenity' => ""}, hash_session)
+    assert_equal({}, hash_session)
 
     # knock out entire dest hash if "--" is passed for source
     hash_params = {'amenity' => ["--"]}
@@ -383,7 +383,7 @@ class TestDeepMerge < Test::Unit::TestCase
     hash_params = {'amenity' => "--"}
     hash_session = {"amenity" => ["1"]}
     DeepMerge::deep_merge!(hash_params, hash_session, {:knockout_prefix => "--", :unpack_arrays => ","})
-    assert_equal({'amenity' => ""}, hash_session)
+    assert_equal({}, hash_session)
 
     # knock out entire dest hash if "--" is passed for source
     hash_params = {'amenity' => ["--"]}
@@ -413,7 +413,7 @@ class TestDeepMerge < Test::Unit::TestCase
     hash_params = {'amenity' => "--"}
     hash_session = {"amenity"=>{"id"=>["1", "2", "3", "4"]}}
     DeepMerge::deep_merge!(hash_params, hash_session, {:knockout_prefix => "--", :unpack_arrays => ","})
-    assert_equal({'amenity' => ""}, hash_session)
+    assert_equal({}, hash_session)
 
     # knock out entire dest hash if "--" is passed for source
     hash_params = {'amenity' => ["--"]}
@@ -425,19 +425,19 @@ class TestDeepMerge < Test::Unit::TestCase
     hash_params = {"region" => {'ids' => FIELD_KNOCKOUT_PREFIX}}
     hash_session = {"region"=>{"ids"=>["1", "2", "3", "4"]}}
     DeepMerge::deep_merge!(hash_params, hash_session, {:knockout_prefix => FIELD_KNOCKOUT_PREFIX, :unpack_arrays => ","})
-    assert_equal({'region' => {'ids' => ""}}, hash_session)
+    assert_equal({'region' => {}}, hash_session)
 
     # knock out dest array but leave other elements of hash intact
     hash_params = {"region" => {'ids' => FIELD_KNOCKOUT_PREFIX}}
     hash_session = {"region"=>{"ids"=>["1", "2", "3", "4"], 'id'=>'11'}}
     DeepMerge::deep_merge!(hash_params, hash_session, {:knockout_prefix => FIELD_KNOCKOUT_PREFIX, :unpack_arrays => ","})
-    assert_equal({'region' => {'ids' => "", 'id'=>'11'}}, hash_session)
+    assert_equal({'region' => {'id'=>'11'}}, hash_session)
 
     # knock out entire tree of dest hash
     hash_params = {"region" => FIELD_KNOCKOUT_PREFIX}
     hash_session = {"region"=>{"ids"=>["1", "2", "3", "4"], 'id'=>'11'}}
     DeepMerge::deep_merge!(hash_params, hash_session, {:knockout_prefix => FIELD_KNOCKOUT_PREFIX, :unpack_arrays => ","})
-    assert_equal({'region' => ""}, hash_session)
+    assert_equal({}, hash_session)
 
     # knock out entire tree of dest hash - retaining array format
     hash_params = {"region" => {'ids' => [FIELD_KNOCKOUT_PREFIX]}}
@@ -473,13 +473,13 @@ class TestDeepMerge < Test::Unit::TestCase
     hash_params = {"amenity"=>"--1"}
     hash_session = {"amenity"=>"1"}
     DeepMerge::deep_merge!(hash_params, hash_session, {:knockout_prefix => FIELD_KNOCKOUT_PREFIX})
-    assert_equal({"amenity"=>""}, hash_session)
+    assert_equal({}, hash_session)
 
     # Example: src = {'key' => "--1"}, dst = {'key' => "2"} -> merges to {'key' => ""}
     hash_params = {"amenity"=>"--1"}
     hash_session = {"amenity"=>"2"}
     DeepMerge::deep_merge!(hash_params, hash_session, {:knockout_prefix => FIELD_KNOCKOUT_PREFIX})
-    assert_equal({"amenity"=>""}, hash_session)
+    assert_equal({}, hash_session)
 
     # Example: src = {'key' => "--1"}, dst = {'key' => "1"} -> merges to {'key' => ""}
     hash_params = {"amenity"=>["--1"]}
@@ -497,14 +497,14 @@ class TestDeepMerge < Test::Unit::TestCase
     hash_params = {"amenity"=>"--1"}
     hash_session = {}
     DeepMerge::deep_merge!(hash_params, hash_session, {:knockout_prefix => FIELD_KNOCKOUT_PREFIX})
-    assert_equal({"amenity"=>""}, hash_session)
+    assert_equal({"amenity"=>nil}, hash_session)
 
 
     # Example: src = {'key' => "--1"}, dst = {'key' => "1"} -> merges to {'key' => ""}
     hash_params = {"amenity"=>"--1"}
     hash_session = {"amenity"=>["1"]}
     DeepMerge::deep_merge!(hash_params, hash_session, {:knockout_prefix => FIELD_KNOCKOUT_PREFIX})
-    assert_equal({"amenity"=>""}, hash_session)
+    assert_equal({}, hash_session)
 
     #are unmerged hashes passed unmodified w/out :unpack_arrays?
     hash_params = {"amenity"=>{"id"=>["26,27"]}}
@@ -557,32 +557,32 @@ class TestDeepMerge < Test::Unit::TestCase
     hash_src= {'region' =>{'muni_city_id' => '--', 'ids'=>'--', 'id'=>'5'}, 'query_uuid' => 'zzz'}
     hash_dst= {'region' =>{'muni_city_id' => '2244', 'ids'=>['227','2','3','3'], 'id'=>'3'}, 'query_uuid' => 'zzz'}
     DeepMerge::deep_merge!(hash_src, hash_dst, {:knockout_prefix => '--', :unpack_arrays => ","})
-    assert_equal({'region' =>{'muni_city_id' => '', 'ids'=>'', 'id'=>'5'}, 'query_uuid' => 'zzz'}, hash_dst)
+    assert_equal({'region' =>{'id'=>'5'}, 'query_uuid' => 'zzz'}, hash_dst)
 
     hash_src= {'region' =>{'muni_city_id' => '--', 'ids'=>['--'], 'id'=>'5'}, 'query_uuid' => 'zzz'}
     hash_dst= {'region' =>{'muni_city_id' => '2244', 'ids'=>['227','2','3','3'], 'id'=>'3'}, 'query_uuid' => 'zzz'}
     DeepMerge::deep_merge!(hash_src, hash_dst, {:knockout_prefix => '--', :unpack_arrays => ","})
-    assert_equal({'region' =>{'muni_city_id' => '', 'ids'=>[], 'id'=>'5'}, 'query_uuid' => 'zzz'}, hash_dst)
+    assert_equal({'region' =>{'ids' => [], 'id'=>'5'}, 'query_uuid' => 'zzz'}, hash_dst)
 
     hash_src= {'region' =>{'muni_city_id' => '--', 'ids'=>['--','227'], 'id'=>'5'}, 'query_uuid' => 'zzz'}
     hash_dst= {'region' =>{'muni_city_id' => '2244', 'ids'=>['227','2','3','3'], 'id'=>'3'}, 'query_uuid' => 'zzz'}
     DeepMerge::deep_merge!(hash_src, hash_dst, {:knockout_prefix => '--', :unpack_arrays => ","})
-    assert_equal({'region' =>{'muni_city_id' => '', 'ids'=>['227'], 'id'=>'5'}, 'query_uuid' => 'zzz'}, hash_dst)
+    assert_equal({'region' =>{'ids'=>['227'], 'id'=>'5'}, 'query_uuid' => 'zzz'}, hash_dst)
 
     hash_src = {"muni_city_id"=>"--", "id"=>""}
     hash_dst = {"muni_city_id"=>"", "id"=>""}
     DeepMerge::deep_merge!(hash_src, hash_dst, {:knockout_prefix => '--', :unpack_arrays => ","})
-    assert_equal({"muni_city_id"=>"", "id"=>""}, hash_dst)
+    assert_equal({"id"=>""}, hash_dst)
 
     hash_src = {"region"=>{"muni_city_id"=>"--", "id"=>""}}
     hash_dst = {"region"=>{"muni_city_id"=>"", "id"=>""}}
     DeepMerge::deep_merge!(hash_src, hash_dst, {:knockout_prefix => '--', :unpack_arrays => ","})
-    assert_equal({"region"=>{"muni_city_id"=>"", "id"=>""}}, hash_dst)
+    assert_equal({"region"=>{"id"=>""}}, hash_dst)
 
     hash_src = {"query_uuid"=>"a0dc3c84-ec7f-6756-bdb0-fff9157438ab", "url_regions"=>[], "region"=>{"muni_city_id"=>"--", "id"=>""}, "property"=>{"property_type_id"=>"", "search_rate_min"=>"", "search_rate_max"=>""}, "task"=>"search", "run_query"=>"Search"}
     hash_dst = {"query_uuid"=>"a0dc3c84-ec7f-6756-bdb0-fff9157438ab", "url_regions"=>[], "region"=>{"muni_city_id"=>"", "id"=>""}, "property"=>{"property_type_id"=>"", "search_rate_min"=>"", "search_rate_max"=>""}, "task"=>"search", "run_query"=>"Search"}
     DeepMerge::deep_merge!(hash_src, hash_dst, {:knockout_prefix => '--', :unpack_arrays => ","})
-    assert_equal({"query_uuid"=>"a0dc3c84-ec7f-6756-bdb0-fff9157438ab", "url_regions"=>[], "region"=>{"muni_city_id"=>"", "id"=>""}, "property"=>{"property_type_id"=>"", "search_rate_min"=>"", "search_rate_max"=>""}, "task"=>"search", "run_query"=>"Search"}, hash_dst)
+    assert_equal({"query_uuid"=>"a0dc3c84-ec7f-6756-bdb0-fff9157438ab", "url_regions"=>[], "region"=>{"id"=>""}, "property"=>{"property_type_id"=>"", "search_rate_min"=>"", "search_rate_max"=>""}, "task"=>"search", "run_query"=>"Search"}, hash_dst)
 
     # hash of array of hashes
     hash_src = {"item" => [{"1" => "3"}, {"2" => "4"}]}

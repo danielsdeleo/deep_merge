@@ -114,6 +114,7 @@ module DeepMerge
           if dest[src_key]
             puts "#{di} ==>merging: #{src_key.inspect} => #{src_value.inspect} :: #{dest[src_key].inspect}" if merge_debug
             dest[src_key] = deep_merge!(src_value, dest[src_key], options.merge(:debug_indent => di + '  '))
+            dest.delete(src_key) if dest[src_key].nil? and not src_value.nil?
           else # dest[src_key] doesn't exist so we want to create and overwrite it (but we do this via deep_merge!)
             puts "#{di} ==>merging over: #{src_key.inspect} => #{src_value.inspect}" if merge_debug
             # note: we rescue here b/c some classes respond to "dup" but don't implement it (Numeric, TrueClass, FalseClass, NilClass among maybe others)
@@ -222,7 +223,7 @@ module DeepMerge
         dest = src_tmp
       else # if we do find a knockout_prefix, then we just delete dest
         puts "#{di}\"\" -over-> #{dest.inspect}" if merge_debug
-        dest = ""
+        dest = nil
       end
     elsif overwrite_unmergeable
       dest = source
