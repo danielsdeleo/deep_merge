@@ -1,3 +1,9 @@
+2017-11-16 Jason Frey <fryguy9@gmail.com>
+  * Ship version 1.2.0
+
+2017-04-25 Joe Rafaniello <jrafanie@redhat.com>
+  * Merge nil values or keep the original via an option
+
 2016-08-01 Jason Frey <fryguy9@gmail.com>
   * Ship version 1.1.1
 
