@@ -2,10 +2,10 @@
 
 Gem::Specification.new do |s|
   s.name = %q{deep_merge}
-  s.version = "1.2.0"
+  s.version = "1.2.1"
 
   s.authors = ["Steve Midgley"]
-  s.date = %q{2016-08-01}
+  s.date = %q{2016-11-16}
   s.description = %q{Recursively merge hashes.}
   s.email = %q{dan@kallistec.com}
   s.license = 'MIT'

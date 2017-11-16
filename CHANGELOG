@@ -1,4 +1,9 @@
 2017-11-16 Jason Frey <fryguy9@gmail.com>
+  * Ship version 1.2.1
+
+  * Fixed release date in the gemspec.
+
+2017-11-16 Jason Frey <fryguy9@gmail.com>
   * Ship version 1.2.0
 
 2017-04-25 Joe Rafaniello <jrafanie@redhat.com>
