@@ -33,10 +33,16 @@ class TestDeepMerge < Test::Unit::TestCase
     assert hash_dest.deep_merge!(hash_src)
     assert_equal({'id' => [1,2,3,4,5]}, hash_dest)
 
+    hash_src  = {'id' => [3,4,5]}
+    hash_dest = {'id' => [1,2,3]}
+    assert_equal({'id' => [1,2,3,4,5]}, hash_dest.deep_merge(hash_src))
+    assert_equal({'id' => [1,2,3]}, hash_dest)
+
     hash_src  = {'id' => 'xxx'}
     hash_dest = {'id' => [1,2,3]}
-    assert hash_dest.deep_merge(hash_src)
-    assert_equal({'id' => [1,2,3]}, hash_dest)
+    assert_equal({'id' => [1,2,3]}, hash_dest.deep_merge(hash_src))
+
+    assert({}.freeze.deep_merge(a: 1))
   end
 
   FIELD_KNOCKOUT_PREFIX = DeepMerge::DEFAULT_FIELD_KNOCKOUT_PREFIX
