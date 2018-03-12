@@ -224,7 +224,7 @@ module DeepMerge
         puts "#{di}\"\" -over-> #{dest.inspect}" if merge_debug
         dest = ""
       end
-    elsif overwrite_unmergeable
+    elsif overwrite_unmergeable || source.kind_of?(FalseClass)
       dest = source
     end
     dest

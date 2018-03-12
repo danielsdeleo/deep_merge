@@ -87,6 +87,18 @@ class TestDeepMerge < Test::Unit::TestCase
     DeepMerge::deep_merge!(hash_src, hash_dst)
     assert_equal(["2","4","1","3"], hash_dst['property'])
 
+    # take false value from source
+    hash_src = {"name" => false}
+    hash_dst = {"name" => true}
+    DeepMerge::deep_merge!(hash_src, hash_dst)
+    assert_equal({"name" => false}, hash_dst)
+
+    # take false value from source even when preserving unmergables
+    hash_src = {"name" => false}
+    hash_dst = {"name" => true}
+    DeepMerge::deep_merge!(hash_src, hash_dst, {:preserve_unmergeables => true})
+    assert_equal({"name" => false}, hash_dst)
+
     # hashes holding array (overwrite)
     hash_src = {"property" => ["1","3"]}
     hash_dst = {"property" => ["2","4"]}
