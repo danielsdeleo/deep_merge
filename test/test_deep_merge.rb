@@ -46,6 +46,12 @@ class TestDeepMerge < Test::Unit::TestCase
     # merge tests (moving from basic to more complex)
 
     # test merging an hash w/array into blank hash
+    hash_src = {'something' => true}
+    hash_dst = {'something' => false}
+    DeepMerge::deep_merge!(hash_src, hash_dst, {:preserve_unmergeables => true})
+    assert_equal({'something' => false}, hash_dst)
+
+    # test merging an hash w/array into blank hash
     hash_src = {'id' => '2'}
     hash_dst = {}
     DeepMerge::deep_merge!(hash_src.dup, hash_dst, {:knockout_prefix => FIELD_KNOCKOUT_PREFIX, :unpack_arrays => ","})
