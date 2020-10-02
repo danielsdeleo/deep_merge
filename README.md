@@ -21,7 +21,6 @@ By default, `deep_merge!` will overwrite any unmergeables and merge everything e
 
 Options
 -------
-
 Options are specified in the last parameter passed, which should be in hash format:
 
     hash.deep_merge!({:x => [1,2]}, {:knockout_prefix => '--'})
@@ -64,7 +63,6 @@ Additionally, if the knockout_prefix is passed alone as a string, it will cause 
     Results: {:x => ""}
 
 **:overwrite_arrays**
-
 The purpose of this is to provide a way to replace Arrays instead of having them merge together.
 
     source = {:x => ['1', '2']}
@@ -73,7 +71,6 @@ The purpose of this is to provide a way to replace Arrays instead of having them
     Results: {:x => ['1', '2']}
 
 **:unpack_arrays**
-
 The purpose of this is to permit compound elements to be passed in as strings and to be converted into discrete array elements
 
     irsource = {:x => ['1,2,3', '4']}
