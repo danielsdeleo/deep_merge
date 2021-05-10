@@ -615,6 +615,12 @@ class TestDeepMerge < Test::Unit::TestCase
     DeepMerge::deep_merge!(hash_src, hash_dst, {:merge_hash_arrays => true})
     assert_equal({"item" => [{"3" => "5"}, {"1" => "3"}, "str"]}, hash_dst)
 
+     # Merging nested arrays within a hash: :merge_hash_arrays => true
+     hash_src = {"item" => ["type" => "peach", "traits" => [{"name" => "1"}, {"name" => "2"}]]}
+     hash_dst = {"item" => ["type" => "peach", "traits" => [{"name" => "3"}]]}
+     DeepMerge::deep_merge!(hash_src, hash_dst), {:merge_hash_arrays => true}
+     assert_equal({"item" => ["type" => "peach", "traits" => [{"name" => "3"}, {"name" => "1"}, {"name" => "2"}]]}, hash_dst)
+
     # Merging empty strings
     s1, s2 = "hello", ""
     [s1, s2].each { |s| s.extend StringBlank }
