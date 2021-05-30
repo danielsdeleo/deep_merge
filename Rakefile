@@ -16,4 +16,3 @@ begin
 rescue LoadError
   #okay, then
 end
-
