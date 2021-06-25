@@ -122,6 +122,11 @@ module DeepMerge
             rescue TypeError
               src_dup = src_value
             end
+            if src_dup.kind_of?(Array) && keep_array_duplicates
+              # note: in this case the merge will be additive, rather than a bounded set, so we can't simply merge src with itself
+              # We need to merge src with an empty array
+              src_dup = []
+            end
             dest[src_key] = deep_merge!(src_value, src_dup, options.merge(:debug_indent => di + '  '))
           end
         elsif dest.kind_of?(Array) && extend_existing_arrays
