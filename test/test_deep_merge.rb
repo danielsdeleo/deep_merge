@@ -99,6 +99,12 @@ class TestDeepMerge < Test::Unit::TestCase
     DeepMerge::deep_merge!(hash_src, hash_dst, {:sort_merged_arrays => true})
     assert_equal(["1","2","3","4"].sort, hash_dst['property'])
 
+    # hashes with a false value; do not overwrite keys (like having a defaults hash and a user-defined hash)
+    hash_src  = {"name" => true,  "name1" => "value1"}
+    hash_dst  = {"name" => false, "name1" => "value"}
+    DeepMerge::deep_merge!(hash_src, hash_dst, preserve_unmergeables: true)
+    assert_equal({"name" => false, "name1" => "value"}, hash_dst)
+
     # hashes holding hashes holding arrays (array with duplicate elements is merged with dest then src
     hash_src = {"property" => {"bedroom_count" => ["1", "2"], "bathroom_count" => ["1", "4+"]}}
     hash_dst = {"property" => {"bedroom_count" => ["3", "2"], "bathroom_count" => ["2"]}}
