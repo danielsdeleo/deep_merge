@@ -1,3 +1,10 @@
+2022-01-07 Jason Frey <fryguy9@gmail.com>
+  * Ship version 1.2.2
+
+  * Switched to GitHub actions and add testing of Rubies up to Ruby 3.0
+  * Fixed issue with keep_duplicate_arrays when merging into a nil array. Thanks ALTinners!
+  * Added documentation for keep_duplicate_arrays
+
 2017-11-16 Jason Frey <fryguy9@gmail.com>
   * Ship version 1.2.1
 
