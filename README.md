@@ -1,5 +1,8 @@
-DeepMerge Overview
+DeepMerge
 ==================
+
+[![Gem Version](https://badge.fury.io/rb/deep_merge.svg)](http://badge.fury.io/rb/deep_merge)
+[![CI](https://github.com/ManageIQ/deep_merge/actions/workflows/ci.yaml/badge.svg)](https://github.com/ManageIQ/deep_merge/actions/workflows/ci.yaml)
 
 Deep Merge is a simple set of utility functions for Hash. It permits you to merge elements inside a hash together recursively. The manner by which it does this is somewhat arbitrary (since there is no defining standard for this) but it should end up being pretty intuitive and do what you expect.
 
