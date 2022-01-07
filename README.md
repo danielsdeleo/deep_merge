@@ -1,5 +1,5 @@
 DeepMerge
-==================
+=========
 
 [![Gem Version](https://badge.fury.io/rb/deep_merge.svg)](http://badge.fury.io/rb/deep_merge)
 [![CI](https://github.com/ManageIQ/deep_merge/actions/workflows/ci.yaml/badge.svg)](https://github.com/ManageIQ/deep_merge/actions/workflows/ci.yaml)
@@ -24,6 +24,7 @@ By default, `deep_merge!` will overwrite any unmergeables and merge everything e
 
 Options
 -------
+
 Options are specified in the last parameter passed, which should be in hash format:
 
     hash.deep_merge!({:x => [1,2]}, {:knockout_prefix => '--'})
@@ -138,8 +139,8 @@ Simple Example Code
     y.deep_merge!(x)
     # results: y = {:x => [1,2,3,4,5]}
 
-Availablility
-=============
+Availability
+============
 
 `deep_merge` was written by Steve Midgley, and is now maintained by Daniel DeLeo. The official home of `deep_merge` on the internet is now https://github.com/danielsdeleo/deep_merge
 
