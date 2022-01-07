@@ -113,7 +113,7 @@ Without this setting:
     source = { "property" => ["2", "3"] }
     dest   = { "property" => ["1", "2"] }
     dest.deep_merge!(source)
-    Results: {"property" => ["1", 2", "3"]}
+    Results: {"property" => ["1", "2", "3"]}
 
 With this setting:
 
