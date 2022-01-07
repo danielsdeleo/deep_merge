@@ -42,6 +42,8 @@ Options are specified in the last parameter passed, which should be in hash form
       Set to true to merge hashes within arrays
     :extend_existing_arrays DEFAULT: false
       Set to true to extend existing arrays, instead of overwriting them
+    :keep_array_duplicates  DEFAULT: false
+      Set to true to keep duplicate entries in arrays, instead of coalescing them
     :merge_nil_values       DEFAULT: false
       Set to true to merge nil hash values, overwriting a possibly non-nil value
     :merge_debug            DEFAULT: false
@@ -101,6 +103,24 @@ Push src elements to existing arrays, instead of overwriting them.
     dest   = { "property" => ["1", "2", "3"] }
     dest.deep_merge!(source, {:extend_existing_arrays => true})
     Results: {"property" => ["1", "2", "3", "4"]}
+
+**:keep_array_duplicates**
+
+Keeps duplicate entries in arrays, instead of coalescing them.
+
+Without this setting:
+
+    source = { "property" => ["2", "3"] }
+    dest   = { "property" => ["1", "2"] }
+    dest.deep_merge!(source)
+    Results: {"property" => ["1", 2", "3"]}
+
+With this setting:
+
+    source = { "property" => ["1", "2"] }
+    dest   = { "property" => ["2", "3"] }
+    dest.deep_merge!(source, {:keep_array_duplicates => true})
+    Results: {"property" => ["1", "2", "2", "3"]}
 
 **:merge_nil_values**
 
