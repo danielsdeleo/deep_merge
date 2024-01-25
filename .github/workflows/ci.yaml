@@ -5,6 +5,9 @@ on: [push, pull_request]
 jobs:
   ci:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
     strategy:
       matrix:
         ruby-version:
@@ -33,3 +36,6 @@ jobs:
     - name: Run tests
       run: bundle exec rake
       continue-on-error: ${{ matrix.allow-failure }}
+    - uses: dawidd6/action-publish-gem@v1
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
