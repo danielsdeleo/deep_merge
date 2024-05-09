@@ -35,7 +35,7 @@ class TestDeepMerge < Test::Unit::TestCase
 
     hash_src  = {'id' => 'xxx'}
     hash_dest = {'id' => [1,2,3]}
-    assert hash_dest.deep_merge(hash_src)
+    assert hash_dest.deep_merge!(hash_src, preserve_unmergeables: true)
     assert_equal({'id' => [1,2,3]}, hash_dest)
   end
 
