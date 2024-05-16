@@ -1,3 +1,5 @@
+  * Dropped support for ruby versions before 2.7
+
 2022-01-07 Jason Frey <fryguy9@gmail.com>
   * Ship version 1.2.2
 
