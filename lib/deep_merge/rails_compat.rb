@@ -13,12 +13,6 @@ module DeepMerge
       default_opts = {:preserve_unmergeables => false}
       DeepMerge::deep_merge!(source, self, default_opts.merge(options))
     end
-
-    # deeper_merge will merge and skip any unmergeables in destination hash
-    def deeper_merge(source, options = {})
-      default_opts = {:preserve_unmergeables => true}
-      DeepMerge::deep_merge!(source, self, default_opts.merge(options))
-    end
   end
 end
 

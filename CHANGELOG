@@ -1,3 +1,4 @@
+  * removed deep_merge and deeper_merge, if you used them replace with `!` variant with `preserve_unmergeables: true`
   * Dropped support for ruby versions before 2.7
 
 2022-01-07 Jason Frey <fryguy9@gmail.com>
@@ -64,7 +65,7 @@
 
 2010-01-11  Dan DeLeo <dan@kallistec.com>
 
-  * fix boolean merging according to mdkent's patch explicitly test 
+  * fix boolean merging according to mdkent's patch explicitly test
     for nils w/ #nil? instead of negating. Thanks mdkent!
 
 2009-12-25  Dan DeLeo <dan@kallistec.com>
