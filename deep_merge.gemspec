@@ -1,5 +1,3 @@
-# -*- encoding: utf-8 -*-
-
 Gem::Specification.new do |s|
   s.name = %q{deep_merge}
   s.version = "1.2.2"
@@ -29,7 +27,7 @@ Gem::Specification.new do |s|
   s.test_files = [
     "test/test_deep_merge.rb"
   ]
-  s.required_ruby_version = '>= 2.7'
+  s.required_ruby_version = '>= 2.7.0'
 
   s.add_development_dependency "rake"
   s.add_development_dependency "test-unit-minitest"
