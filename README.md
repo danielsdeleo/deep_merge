@@ -174,7 +174,6 @@ In a Gemfile:
 
 The deep_merge methods will then be defined as
 
-    Hash#deeper_merge
     Hash#deeper_merge!
     Hash#ko_deeper_merge!
 
